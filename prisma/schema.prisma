@@ -1,0 +1,393 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// =========================================================================
+// AUTH & USERS
+// =========================================================================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(COMPETITOR)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  handler  Handler?
+  bookings Booking[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  ORGANIZER
+  COMPETITOR
+}
+
+// =========================================================================
+// HANDLERS
+// =========================================================================
+
+model Handler {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique @map("user_id")
+  handlerName String   @map("handler_name")
+  phone       String?
+  email       String?
+  clubName    String?  @map("club_name")
+  country     String?  @default("EST")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User          @relation(fields: [userId], references: [id])
+  dogs        Dog[]
+  competitors Competitor[]
+
+  @@map("handlers")
+}
+
+// =========================================================================
+// DOGS
+// =========================================================================
+
+model Dog {
+  id                    Int       @id @default(autoincrement())
+  handlerId             Int       @map("handler_id")
+  nickName              String    @map("nick_name")
+  officialName          String?   @map("official_name")
+  breed                 String?
+  gender                String?
+  birthday              DateTime?
+  sizeEst               String?   @map("size_est")
+  sizeFci               String?   @map("size_fci")
+  agilityClass          String?   @map("agility_class")
+  jumpClass             String?   @map("jump_class")
+  registerCode          String?   @map("register_code")
+  idCode                String?   @map("id_code")
+  generalVaccinationEnd DateTime? @map("general_vaccination_end")
+  rabiesVaccinationEnd  DateTime? @map("rabies_vaccination_end")
+  ownersName            String?   @map("owners_name")
+  agilityClassChangedAt DateTime? @map("agility_class_changed_at")
+  jumpClassChangedAt    DateTime? @map("jump_class_changed_at")
+  info                  String?   @db.Text
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  handler      Handler          @relation(fields: [handlerId], references: [id])
+  competitors  Competitor[]
+  measurements DogMeasurement[]
+
+  @@map("dogs")
+}
+
+// =========================================================================
+// BOOKINGS (Competitions)
+// =========================================================================
+
+model Booking {
+  id                 Int       @id @default(autoincrement())
+  userId             Int       @map("user_id")
+  startDate          DateTime  @map("start_date")
+  endDate            DateTime  @map("end_date")
+  qualTime           String?   @map("qual_time")
+  organizerName      String    @map("organizer_name")
+  clubName           String    @map("club_name")
+  email              String
+  phone              String
+  location           String
+  referee            Json?
+  info               String?   @db.Text
+  competitionClasses String?   @map("competition_classes") @db.Text
+  competitionType    String    @map("competition_type")
+  status             String    @default("PENDING")
+  regStatus          String?   @map("reg_status")
+  regCloseDate       DateTime? @map("reg_close_date")
+  protocolPublished  Int       @default(0) @map("protocol_published")
+  teamsLocked        Int       @default(0) @map("teams_locked")
+  teamsPublished     Int       @default(0) @map("teams_published")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  user              User               @relation(fields: [userId], references: [id])
+  competitionInfo   CompetitionInfo?
+  competitors       Competitor[]
+  competitionTracks CompetitionTrack[]
+  startProtocols    StartProtocol[]
+  teams             Team[]
+  awardings         Awarding[]
+  dogMeasurements   DogMeasurement[]
+
+  @@map("bookings")
+}
+
+// =========================================================================
+// COMPETITION INFO
+// =========================================================================
+
+model CompetitionInfo {
+  id                   Int      @id @default(autoincrement())
+  bookingId            Int      @unique @map("booking_id")
+  descriptionEst       String?  @map("description_est") @db.LongText
+  descriptionEng       String?  @map("description_eng") @db.LongText
+  sponsorImages        Json?    @map("sponsor_image_urls")
+  maxCompetitorsPerDay Json?    @map("max_competitors_per_day")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("competition_info")
+}
+
+// =========================================================================
+// COMPETITION TRACKS
+// =========================================================================
+
+model CompetitionTrack {
+  id              Int      @id @default(autoincrement())
+  bookingId       Int      @map("booking_id")
+  competitionDate DateTime @map("competition_date")
+  letter          String
+  trackType       String   @map("track_type")
+  size            String
+  competitionType String   @map("competition_type")
+  referee         String?
+  sizeStandard    String?  @map("size_standard")
+  sortOrder       Int      @default(0) @map("sort_order")
+  isRelay         Boolean  @default(false) @map("is_relay")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  booking           Booking            @relation(fields: [bookingId], references: [id])
+  competitorTracks  CompetitorTrack[]
+  startProtocols    StartProtocol[]
+  trackResults      TrackResult[]
+  competitorResults CompetitorResult[]
+  teamResults       TeamResult[]
+
+  @@map("competition_tracks")
+}
+
+// =========================================================================
+// COMPETITORS (registrations)
+// =========================================================================
+
+model Competitor {
+  id                   Int      @id @default(autoincrement())
+  bookingId            Int      @map("booking_id")
+  handlerId            Int      @map("handler_id")
+  dogId                Int      @map("dog_id")
+  status               String   @default("PENDING") @map("competitor_status")
+  remarks              String?  @db.Text
+  needsMeasurement     Boolean  @default(false) @map("needs_measurement")
+  needsCompetitionBook Boolean  @default(false) @map("needs_competition_book")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  booking          Booking            @relation(fields: [bookingId], references: [id])
+  handler          Handler            @relation(fields: [handlerId], references: [id])
+  dog              Dog                @relation(fields: [dogId], references: [id])
+  competitorTracks CompetitorTrack[]
+  startProtocols   StartProtocol[]
+  results          CompetitorResult[]
+  teamMembers      TeamMember[]
+
+  @@map("competitors")
+}
+
+// =========================================================================
+// COMPETITOR TRACKS
+// =========================================================================
+
+model CompetitorTrack {
+  id                 Int      @id @default(autoincrement())
+  competitorId       Int      @map("competitor_id")
+  competitionTrackId Int      @map("competition_track_id")
+  competitionDate    DateTime @map("competition_date")
+  sizeStandard       String?  @map("size_standard")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  competitor       Competitor       @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  competitionTrack CompetitionTrack @relation(fields: [competitionTrackId], references: [id])
+
+  @@map("competitor_tracks")
+}
+
+// =========================================================================
+// START PROTOCOL
+// =========================================================================
+
+model StartProtocol {
+  id                 Int      @id @default(autoincrement())
+  bookingId          Int      @map("booking_id")
+  competitorId       Int      @map("competitor_id")
+  competitionTrackId Int      @map("competition_track_id")
+  competitionDate    DateTime @map("competition_date")
+  size               String
+  startNumber        Int      @map("start_number")
+  sortOrder          Int      @default(0) @map("sort_order")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  booking          Booking          @relation(fields: [bookingId], references: [id])
+  competitor       Competitor       @relation(fields: [competitorId], references: [id])
+  competitionTrack CompetitionTrack @relation(fields: [competitionTrackId], references: [id])
+
+  @@map("start_protocol")
+}
+
+// =========================================================================
+// TRACK RESULTS (track parameters per size group)
+// =========================================================================
+
+model TrackResult {
+  id                 Int      @id @default(autoincrement())
+  competitionTrackId Int      @map("competition_track_id")
+  sizeGroup          String   @map("size_group")
+  trackLength        Decimal? @map("track_length") @db.Decimal(8, 2)
+  trackSpeed         Decimal? @map("track_speed") @db.Decimal(8, 2)
+  idealTime          Decimal? @map("ideal_time") @db.Decimal(8, 2)
+  maxTime            Decimal? @map("max_time") @db.Decimal(8, 2)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  competitionTrack CompetitionTrack @relation(fields: [competitionTrackId], references: [id])
+
+  @@unique([competitionTrackId, sizeGroup])
+  @@map("track_results")
+}
+
+// =========================================================================
+// COMPETITOR RESULTS
+// =========================================================================
+
+model CompetitorResult {
+  id                 Int      @id @default(autoincrement())
+  startProtocolId    Int?     @map("start_protocol_id")
+  competitorId       Int      @map("competitor_id")
+  competitionTrackId Int      @map("competition_track_id")
+  timeSeconds        Decimal? @map("time_seconds") @db.Decimal(8, 2)
+  faults             Int      @default(0)
+  isDsq              Boolean  @default(false) @map("is_dsq")
+  isDns              Boolean  @default(false) @map("is_dns")
+  hasQualification   Boolean  @default(false) @map("has_qualification")
+  notes              String?
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  competitor       Competitor       @relation(fields: [competitorId], references: [id])
+  competitionTrack CompetitionTrack @relation(fields: [competitionTrackId], references: [id])
+
+  @@unique([competitorId, competitionTrackId])
+  @@map("competitor_results")
+}
+
+// =========================================================================
+// TEAMS
+// =========================================================================
+
+model Team {
+  id              Int      @id @default(autoincrement())
+  bookingId       Int      @map("booking_id")
+  competitionDate DateTime @map("competition_date")
+  size            String
+  trackType       String?  @map("track_type")
+  teamName        String   @default("") @map("team_name")
+  sortOrder       Int      @default(0) @map("sort_order")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  booking Booking      @relation(fields: [bookingId], references: [id])
+  members TeamMember[]
+  results TeamResult[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id           Int      @id @default(autoincrement())
+  teamId       Int      @map("team_id")
+  competitorId Int      @map("competitor_id")
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  competitor Competitor @relation(fields: [competitorId], references: [id])
+
+  @@unique([teamId, competitorId])
+  @@map("team_members")
+}
+
+model TeamResult {
+  id                 Int      @id @default(autoincrement())
+  teamId             Int      @map("team_id")
+  competitionTrackId Int      @map("competition_track_id")
+  timeSeconds        Decimal? @map("time_seconds") @db.Decimal(8, 2)
+  faults             Int      @default(0)
+  isDsq              Boolean  @default(false) @map("is_dsq")
+  isDns              Boolean  @default(false) @map("is_dns")
+  notes              String?
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  team             Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  competitionTrack CompetitionTrack @relation(fields: [competitionTrackId], references: [id])
+
+  @@unique([teamId, competitionTrackId])
+  @@map("team_results")
+}
+
+// =========================================================================
+// AWARDINGS
+// =========================================================================
+
+model Awarding {
+  id        Int      @id @default(autoincrement())
+  bookingId Int      @map("booking_id")
+  name      String
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  booking Booking         @relation(fields: [bookingId], references: [id])
+  tracks  AwardingTrack[]
+
+  @@map("awardings")
+}
+
+model AwardingTrack {
+  id              Int      @id @default(autoincrement())
+  awardingId      Int      @map("awarding_id")
+  letter          String
+  trackType       String   @map("track_type")
+  competitionDate DateTime @map("competition_date")
+
+  awarding Awarding @relation(fields: [awardingId], references: [id], onDelete: Cascade)
+
+  @@map("awarding_tracks")
+}
+
+// =========================================================================
+// DOG MEASUREMENTS
+// =========================================================================
+
+model DogMeasurement {
+  id          Int      @id @default(autoincrement())
+  dogId       Int      @map("dog_id")
+  bookingId   Int      @map("booking_id")
+  referee     String   @default("")
+  measurement String   @default("")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  dog     Dog     @relation(fields: [dogId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("dog_measurements")
+}
