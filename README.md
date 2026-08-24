@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Agility Competition Management System
+
+Estonian agility dog competition management system built with Next.js. Replaces the previous WordPress-based two-repo system (organizerPahe + vite-event-calendar).
+
+Live: `agilityliit.ee`
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Database**: MySQL + Prisma ORM
+- **Auth**: NextAuth.js v4 (credentials, JWT sessions)
+- **Styling**: Tailwind CSS
+- **Validation**: Zod
+- **Exports**: xlsx (Excel), window.print (PDF)
+- **i18n**: Custom context (ET/EN), cookie-based
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- MySQL 8+ running locally
+
+### Setup
+
+```bash
+npm install
+```
+
+Create `.env`:
+
+```env
+DATABASE_URL="mysql://root:@localhost:3306/agilityliit"
+NEXTAUTH_SECRET="your-random-secret"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+Push database schema:
+
+```bash
+npx prisma db push
+```
+
+Run dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Data Migration (from WordPress)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To migrate data from the old WordPress system:
 
-## Learn More
+1. Import the WP SQL dump into a local MySQL database:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+mysql -u root -e "CREATE DATABASE d88811sd560857 CHARACTER SET utf8mb4"
+mysql -u root d88811sd560857 < d88811sd560857.sql
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Make sure the target database exists with the Prisma schema pushed (see Setup above).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Run the migration script:
 
-## Deploy on Vercel
+```bash
+npx tsx scripts/migrate-data.ts
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This migrates all users, handlers, dogs, bookings, tracks, competitors, results, teams, awardings, and measurements. All users get the temporary password `Parool123!` and must reset their password.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## User Roles
+
+| Role | Access |
+|------|--------|
+| ADMIN | Full access |
+| ORGANIZER | Create/manage competitions |
+| COMPETITOR | Register for competitions, manage dogs/profile |
+
+## Project Structure
+
+```
+src/
+  app/
+    api/            # API route handlers
+    competitor/     # Competitor pages (profile, dogs, competitions)
+    organizer/      # Organizer pages (competition editor, protocols, results)
+    competitions/   # Public competition list & detail
+    results/        # Public results
+    start-protocol/ # Public start protocol
+    dog-statistics/ # Public dog statistics search
+    teams/          # Public teams
+    login/          # Login page
+    register/       # Registration page
+  components/       # Shared React components
+  lib/              # DB client, auth config, utils, validations
+  i18n/             # Language context, translations (ET/EN)
+  generated/prisma/ # Generated Prisma client
+prisma/
+  schema.prisma     # Database schema (16 models)
+scripts/
+  migrate-data.ts   # WP -> Prisma data migration
+```
