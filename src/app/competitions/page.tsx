@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useTranslation } from "@/i18n/LanguageContext";
 
 interface Booking {
   id: number;
@@ -19,6 +20,7 @@ interface Booking {
 
 export default function CompetitionsPage() {
   const { data: session } = useSession();
+  const { t, locale } = useTranslation();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
@@ -59,7 +61,7 @@ export default function CompetitionsPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Võistlused</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t.compTitle}</h1>
 
       <div className="flex gap-2 mb-6">
         <button
@@ -70,7 +72,7 @@ export default function CompetitionsPage() {
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
         >
-          Tulevased ({upcoming.length})
+          {t.compUpcoming} ({upcoming.length})
         </button>
         <button
           onClick={() => setFilter("past")}
@@ -80,16 +82,14 @@ export default function CompetitionsPage() {
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
         >
-          Eelmised ({past.length})
+          {t.compPast} ({past.length})
         </button>
       </div>
 
       {displayed.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
           <p className="text-gray-500">
-            {filter === "upcoming"
-              ? "Hetkel pole ühtegi tulevast võistlust."
-              : "Eelmisi võistlusi ei leitud."}
+            {filter === "upcoming" ? t.compNoUpcoming : t.compNoPast}
           </p>
         </div>
       ) : (
@@ -98,8 +98,14 @@ export default function CompetitionsPage() {
             <CompetitionCard
               key={b.id}
               booking={b}
+              locale={locale}
               isLoggedIn={!!session}
               isCompetitor={session?.user?.role === "COMPETITOR"}
+              regOpenLabel={t.compRegOpen}
+              regClosedLabel={t.compRegClosed}
+              viewLabel={t.compView}
+              registerLabel={t.compRegister}
+              regCloseDateFn={t.compRegCloseDate}
             />
           ))}
         </div>
@@ -110,12 +116,24 @@ export default function CompetitionsPage() {
 
 function CompetitionCard({
   booking,
+  locale,
   isLoggedIn,
   isCompetitor,
+  regOpenLabel,
+  regClosedLabel,
+  viewLabel,
+  registerLabel,
+  regCloseDateFn,
 }: {
   booking: Booking;
+  locale: string;
   isLoggedIn: boolean;
   isCompetitor: boolean;
+  regOpenLabel: string;
+  regClosedLabel: string;
+  viewLabel: string;
+  registerLabel: string;
+  regCloseDateFn: (date: string) => string;
 }) {
   const isOpen = booking.regStatus !== "reg_closed";
   const isPast = new Date(booking.endDate) < new Date();
@@ -136,14 +154,14 @@ function CompetitionCard({
                     : "bg-red-100 text-red-700"
                 }`}
               >
-                {isOpen ? "Reg. avatud" : "Reg. suletud"}
+                {isOpen ? regOpenLabel : regClosedLabel}
               </span>
             )}
           </div>
           <p className="text-sm text-gray-600">
-            {formatDate(booking.startDate)}
+            {formatDate(booking.startDate, locale)}
             {booking.startDate !== booking.endDate &&
-              ` – ${formatDate(booking.endDate)}`}
+              ` – ${formatDate(booking.endDate, locale)}`}
           </p>
           <p className="text-sm text-gray-600">{booking.location}</p>
           <div className="flex items-center gap-2 mt-2">
@@ -154,7 +172,7 @@ function CompetitionCard({
           </div>
           {booking.regCloseDate && isOpen && (
             <p className="text-xs text-gray-400 mt-1">
-              Reg. sulgemise kuupäev: {formatDate(booking.regCloseDate)}
+              {regCloseDateFn(formatDate(booking.regCloseDate, locale))}
             </p>
           )}
         </div>
@@ -163,14 +181,14 @@ function CompetitionCard({
             href={`/competitions/${booking.id}`}
             className="px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-center"
           >
-            Vaata
+            {viewLabel}
           </Link>
           {isLoggedIn && isCompetitor && isOpen && !isPast && (
             <Link
               href={`/competitor/register/${booking.id}`}
               className="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors text-center"
             >
-              Registreeru
+              {registerLabel}
             </Link>
           )}
         </div>
@@ -179,6 +197,6 @@ function CompetitionCard({
   );
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
+function formatDate(dateStr: string, locale: string) {
+  return new Date(dateStr).toLocaleDateString(locale === "en" ? "en-GB" : "et-EE");
 }

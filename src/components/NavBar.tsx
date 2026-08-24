@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
+import { useTranslation } from "@/i18n/LanguageContext";
+import LangToggle from "./LangToggle";
 
 export default function NavBar() {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { t } = useTranslation();
 
   const role = session?.user?.role;
 
@@ -20,31 +23,33 @@ export default function NavBar() {
               href="/"
               className="text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
             >
-              Agility Liit
+              {t.navLogo}
             </Link>
           </div>
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            <NavLink href="/competitions">Võistlused</NavLink>
+            <NavLink href="/competitions">{t.navCompetitions}</NavLink>
+            <NavLink href="/dog-statistics">{t.navStatistics}</NavLink>
 
             {role === "ORGANIZER" || role === "ADMIN" ? (
               <>
-                <NavLink href="/organizer">Korraldaja</NavLink>
+                <NavLink href="/organizer">{t.navOrganizer}</NavLink>
               </>
             ) : null}
 
             {role === "COMPETITOR" ? (
               <>
-                <NavLink href="/competitor">Minu leht</NavLink>
+                <NavLink href="/competitor">{t.navMyPage}</NavLink>
               </>
             ) : null}
 
             {role === "ADMIN" && (
-              <NavLink href="/admin">Admin</NavLink>
+              <NavLink href="/admin">{t.navAdmin}</NavLink>
             )}
 
-            <div className="ml-4 flex items-center gap-2">
+            <div className="ml-4 flex items-center gap-3">
+              <LangToggle />
               {session ? (
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-600">
@@ -54,7 +59,7 @@ export default function NavBar() {
                     onClick={() => signOut({ callbackUrl: "/" })}
                     className="text-sm px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                   >
-                    Logi välja
+                    {t.navLogout}
                   </button>
                 </div>
               ) : (
@@ -63,13 +68,13 @@ export default function NavBar() {
                     href="/login"
                     className="text-sm px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                   >
-                    Logi sisse
+                    {t.navLogin}
                   </Link>
                   <Link
                     href="/register"
                     className="text-sm px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                   >
-                    Registreeru
+                    {t.navRegister}
                   </Link>
                 </>
               )}
@@ -77,7 +82,8 @@ export default function NavBar() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center gap-2">
+            <LangToggle />
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-2 rounded-lg text-gray-600 hover:bg-gray-100"
@@ -112,24 +118,27 @@ export default function NavBar() {
         {menuOpen && (
           <div className="md:hidden pb-4 space-y-1">
             <MobileLink href="/competitions" onClick={() => setMenuOpen(false)}>
-              Võistlused
+              {t.navCompetitions}
+            </MobileLink>
+            <MobileLink href="/dog-statistics" onClick={() => setMenuOpen(false)}>
+              {t.navStatistics}
             </MobileLink>
 
             {(role === "ORGANIZER" || role === "ADMIN") && (
               <MobileLink href="/organizer" onClick={() => setMenuOpen(false)}>
-                Korraldaja
+                {t.navOrganizer}
               </MobileLink>
             )}
 
             {role === "COMPETITOR" && (
               <MobileLink href="/competitor" onClick={() => setMenuOpen(false)}>
-                Minu leht
+                {t.navMyPage}
               </MobileLink>
             )}
 
             {role === "ADMIN" && (
               <MobileLink href="/admin" onClick={() => setMenuOpen(false)}>
-                Admin
+                {t.navAdmin}
               </MobileLink>
             )}
 
@@ -146,19 +155,19 @@ export default function NavBar() {
                     }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
                   >
-                    Logi välja
+                    {t.navLogout}
                   </button>
                 </>
               ) : (
                 <>
                   <MobileLink href="/login" onClick={() => setMenuOpen(false)}>
-                    Logi sisse
+                    {t.navLogin}
                   </MobileLink>
                   <MobileLink
                     href="/register"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Registreeru
+                    {t.navRegister}
                   </MobileLink>
                 </>
               )}

@@ -4,9 +4,11 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "@/i18n/LanguageContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -26,7 +28,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Vale e-posti aadress või parool");
+      setError(t.loginError);
       return;
     }
 
@@ -39,7 +41,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
           <h1 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Logi sisse
+            {t.loginTitle}
           </h1>
 
           {error && (
@@ -54,7 +56,7 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                E-post
+                {t.loginEmail}
               </label>
               <input
                 id="email"
@@ -63,7 +65,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-                placeholder="minu@email.ee"
+                placeholder={t.loginEmailPlaceholder}
               />
             </div>
 
@@ -72,7 +74,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                Parool
+                {t.loginPassword}
               </label>
               <input
                 id="password"
@@ -81,7 +83,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-                placeholder="••••••••"
+                placeholder={t.loginPasswordPlaceholder}
               />
             </div>
 
@@ -90,17 +92,17 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Sisselogimine..." : "Logi sisse"}
+              {loading ? t.loginLoading : t.loginSubmit}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">
-            Pole veel kontot?{" "}
+            {t.loginNoAccount}{" "}
             <Link
               href="/register"
               className="text-blue-600 font-medium hover:text-blue-700"
             >
-              Registreeru
+              {t.navRegister}
             </Link>
           </p>
         </div>

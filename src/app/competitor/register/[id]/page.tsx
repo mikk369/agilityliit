@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "@/i18n/LanguageContext";
 
 interface Dog {
   id: number;
@@ -47,6 +48,7 @@ export default function RegisterPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { t, locale } = useTranslation();
   const bookingId = parseInt(id);
 
   const [step, setStep] = useState(1);
@@ -78,7 +80,7 @@ export default function RegisterPage({
         if (dogsRes.ok) setDogs(await dogsRes.json());
         if (handlerRes.status === 404) setHasHandler(false);
       } catch {
-        setMessage({ type: "error", text: "Andmete laadimine ebaõnnestus" });
+        setMessage({ type: "error", text: t.loadFailed });
       } finally {
         setLoading(false);
       }
@@ -125,10 +127,10 @@ export default function RegisterPage({
         router.push("/competitor/competitions");
       } else {
         const err = await res.json();
-        setMessage({ type: "error", text: err.error || "Registreerimine ebaõnnestus" });
+        setMessage({ type: "error", text: err.error || t.regFailed });
       }
     } catch {
-      setMessage({ type: "error", text: "Serveri viga" });
+      setMessage({ type: "error", text: t.serverError });
     } finally {
       setSubmitting(false);
     }
@@ -148,7 +150,7 @@ export default function RegisterPage({
   if (!booking) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <p className="text-gray-500">Võistlust ei leitud.</p>
+        <p className="text-gray-500">{t.regNotFound}</p>
       </div>
     );
   }
@@ -156,8 +158,8 @@ export default function RegisterPage({
   if (booking.regStatus === "reg_closed") {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Registreerimine suletud</h1>
-        <p className="text-gray-500">Selle võistluse registreerimine on suletud.</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">{t.regClosed}</h1>
+        <p className="text-gray-500">{t.regClosedText}</p>
       </div>
     );
   }
@@ -166,13 +168,13 @@ export default function RegisterPage({
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">
-          Registreerumine võistlusele
+          {t.regTitle}
         </h1>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-800">
-            Registreerumiseks pead esmalt looma oma{" "}
+            {t.regNeedProfile}{" "}
             <Link href="/competitor/profile" className="underline font-medium">
-              koerajuhi profiili
+              {t.regHandlerProfile}
             </Link>
             .
           </p>
@@ -198,15 +200,15 @@ export default function RegisterPage({
         href={`/competitions/${booking.id}`}
         className="text-sm text-blue-600 hover:text-blue-700 mb-4 inline-block"
       >
-        &larr; Tagasi võistluse juurde
+        &larr; {t.regBackToComp}
       </Link>
 
       <h1 className="text-2xl font-bold text-gray-900 mb-1">
-        Registreerumine võistlusele
+        {t.regTitle}
       </h1>
       <p className="text-gray-600 mb-6">
-        {booking.organizerName} · {formatDate(booking.startDate)}
-        {booking.startDate !== booking.endDate && ` – ${formatDate(booking.endDate)}`}
+        {booking.organizerName} · {formatDate(booking.startDate, locale)}
+        {booking.startDate !== booking.endDate && ` – ${formatDate(booking.endDate, locale)}`}
         {" · "}{booking.location}
       </p>
 
@@ -238,7 +240,7 @@ export default function RegisterPage({
               {step > s ? "✓" : s}
             </div>
             <span className={`text-sm ${step === s ? "text-gray-900 font-medium" : "text-gray-400"}`}>
-              {s === 1 ? "Koer" : s === 2 ? "Rajad" : "Kinnitus"}
+              {s === 1 ? t.regStepDog : s === 2 ? t.regStepTracks : t.regStepConfirm}
             </span>
             {s < 3 && <div className="w-8 h-px bg-gray-200" />}
           </div>
@@ -248,16 +250,16 @@ export default function RegisterPage({
       {/* Step 1: Dog Selection */}
       {step === 1 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Vali koer</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t.regSelectDog}</h2>
 
           {dogs.length === 0 ? (
             <div className="text-center py-6">
-              <p className="text-gray-500 mb-3">Sul pole ühtegi koera lisatud.</p>
+              <p className="text-gray-500 mb-3">{t.regNoDogs}</p>
               <Link
                 href="/competitor/dogs"
                 className="text-sm text-blue-600 hover:text-blue-700 underline"
               >
-                Lisa koer
+                {t.regAddDog}
               </Link>
             </div>
           ) : (
@@ -300,7 +302,7 @@ export default function RegisterPage({
                       )}
                       {!vaccineOk && (
                         <p className="text-xs text-red-600 mt-1">
-                          Vaktsineerimise kehtivus ei kata võistluse kuupäevi
+                          {t.regVaccInvalid}
                         </p>
                       )}
                     </div>
@@ -312,7 +314,7 @@ export default function RegisterPage({
 
           <div className="mt-4 flex items-center gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Suuruse standard</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.regSizeStandard}</label>
               <div className="flex gap-3">
                 {(["EST", "FCI"] as const).map((std) => (
                   <label key={std} className="flex items-center gap-2 text-sm">
@@ -339,7 +341,7 @@ export default function RegisterPage({
                 onChange={(e) => setNeedsMeasurement(e.target.checked)}
                 className="text-blue-600 rounded"
               />
-              Vajab mõõtmist
+              {t.regNeedsMeasurement}
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -348,7 +350,7 @@ export default function RegisterPage({
                 onChange={(e) => setNeedsCompetitionBook(e.target.checked)}
                 className="text-blue-600 rounded"
               />
-              Vajab võistlusraamatut
+              {t.regNeedsBook}
             </label>
           </div>
 
@@ -358,7 +360,7 @@ export default function RegisterPage({
               disabled={!selectedDogId}
               className="px-6 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              Edasi
+              {t.next}
             </button>
           </div>
         </div>
@@ -367,14 +369,14 @@ export default function RegisterPage({
       {/* Step 2: Track Selection */}
       {step === 2 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Vali rajad</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t.regSelectTracks}</h2>
 
           {Object.entries(tracksByDate)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([date, tracks]) => (
               <div key={date} className="mb-4 last:mb-0">
                 <h3 className="text-sm font-medium text-gray-500 mb-2">
-                  {formatDate(date)}
+                  {formatDate(date, locale)}
                 </h3>
                 <div className="space-y-1">
                   {tracks.map((track) => (
@@ -394,7 +396,7 @@ export default function RegisterPage({
                             setSelectedTrackIds([...selectedTrackIds, track.id]);
                           } else {
                             setSelectedTrackIds(
-                              selectedTrackIds.filter((id) => id !== track.id)
+                              selectedTrackIds.filter((tid) => tid !== track.id)
                             );
                           }
                         }}
@@ -414,7 +416,7 @@ export default function RegisterPage({
                           {track.competitionType}
                         </span>
                         {track.isRelay && (
-                          <span className="text-xs text-orange-600">(teateviis)</span>
+                          <span className="text-xs text-orange-600">{t.relay}</span>
                         )}
                         {track.referee && (
                           <span className="text-xs text-gray-400 ml-auto">
@@ -430,14 +432,14 @@ export default function RegisterPage({
 
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Märkused (valikuline)
+              {t.regRemarks}
             </label>
             <textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Lisainfo korraldajale..."
+              placeholder={t.regRemarksPlaceholder}
             />
           </div>
 
@@ -446,14 +448,14 @@ export default function RegisterPage({
               onClick={() => setStep(1)}
               className="px-6 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors"
             >
-              Tagasi
+              {t.back}
             </button>
             <button
               onClick={() => setStep(3)}
               disabled={selectedTrackIds.length === 0}
               className="px-6 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              Edasi
+              {t.next}
             </button>
           </div>
         </div>
@@ -463,41 +465,41 @@ export default function RegisterPage({
       {step === 3 && selectedDog && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Registreerimise kokkuvõte
+            {t.regSummary}
           </h2>
 
           <div className="space-y-4">
             <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Võistlus</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">{t.regCompetition}</h3>
               <p className="font-medium text-gray-900">{booking.organizerName}</p>
               <p className="text-sm text-gray-600">
-                {formatDate(booking.startDate)}
-                {booking.startDate !== booking.endDate && ` – ${formatDate(booking.endDate)}`}
+                {formatDate(booking.startDate, locale)}
+                {booking.startDate !== booking.endDate && ` – ${formatDate(booking.endDate, locale)}`}
                 {" · "}{booking.location}
               </p>
             </div>
 
             <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Koer</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">{t.regDog}</h3>
               <p className="font-medium text-gray-900">{selectedDog.nickName}</p>
               <p className="text-sm text-gray-600">
-                {[selectedDog.sizeEst && `Suurus: ${selectedDog.sizeEst}`,
+                {[selectedDog.sizeEst && `${t.regSize}: ${selectedDog.sizeEst}`,
                   selectedDog.agilityClass && `Agility: ${selectedDog.agilityClass}`,
                   selectedDog.jumpClass && `Jumping: ${selectedDog.jumpClass}`
                 ].filter(Boolean).join(" · ")}
               </p>
-              <p className="text-sm text-gray-600">Standard: {sizeStandard}</p>
+              <p className="text-sm text-gray-600">{t.regStandard}: {sizeStandard}</p>
             </div>
 
             <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Valitud rajad</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">{t.regSelectedTracks}</h3>
               <div className="space-y-1">
                 {selectedTrackIds.map((trackId) => {
-                  const track = booking.competitionTracks.find((t) => t.id === trackId);
+                  const track = booking.competitionTracks.find((tr) => tr.id === trackId);
                   if (!track) return null;
                   return (
                     <p key={trackId} className="text-sm text-gray-700">
-                      {formatDate(track.competitionDate)} — Rada {track.letter} ({track.trackType}, {track.competitionType})
+                      {t.regTrack(formatDate(track.competitionDate, locale), track.letter, track.trackType, track.competitionType)}
                     </p>
                   );
                 })}
@@ -506,14 +508,14 @@ export default function RegisterPage({
 
             {(needsMeasurement || needsCompetitionBook) && (
               <div className="p-4 bg-yellow-50 rounded-lg">
-                {needsMeasurement && <p className="text-sm text-yellow-800">Vajab mõõtmist</p>}
-                {needsCompetitionBook && <p className="text-sm text-yellow-800">Vajab võistlusraamatut</p>}
+                {needsMeasurement && <p className="text-sm text-yellow-800">{t.regNeedsMeasurement}</p>}
+                {needsCompetitionBook && <p className="text-sm text-yellow-800">{t.regNeedsBook}</p>}
               </div>
             )}
 
             {remarks && (
               <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Märkused</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-1">{t.dogsNotes}</h3>
                 <p className="text-sm text-gray-700">{remarks}</p>
               </div>
             )}
@@ -524,14 +526,14 @@ export default function RegisterPage({
               onClick={() => setStep(2)}
               className="px-6 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors"
             >
-              Tagasi
+              {t.back}
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting}
               className="px-6 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
             >
-              {submitting ? "Registreerimine..." : "Kinnita registreerimine"}
+              {submitting ? t.regSubmitting : t.regConfirm}
             </button>
           </div>
         </div>
@@ -540,6 +542,6 @@ export default function RegisterPage({
   );
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
+function formatDate(dateStr: string, locale: string) {
+  return new Date(dateStr).toLocaleDateString(locale === "en" ? "en-GB" : "et-EE");
 }

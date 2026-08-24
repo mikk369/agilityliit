@@ -45,6 +45,8 @@ export default withAuth(
           pathname.startsWith("/competitions") ||
           pathname.startsWith("/results") ||
           pathname.startsWith("/start-protocol") ||
+          pathname.startsWith("/teams") ||
+          pathname.startsWith("/dog-statistics") ||
           pathname.startsWith("/not-allowed") ||
           pathname.startsWith("/api/auth")
         ) {

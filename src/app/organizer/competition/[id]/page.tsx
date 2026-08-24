@@ -299,6 +299,36 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
             Võistlejad
           </Link>
           <Link
+            href={`/organizer/competition/${id}/protocol`}
+            className="px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            Protokoll
+          </Link>
+          <Link
+            href={`/organizer/competition/${id}/results`}
+            className="px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            Tulemused
+          </Link>
+          <Link
+            href={`/organizer/competition/${id}/teams`}
+            className="px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            Võistkonnad
+          </Link>
+          <Link
+            href={`/organizer/competition/${id}/awardings`}
+            className="px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            Autasustamine
+          </Link>
+          <Link
+            href={`/organizer/competition/${id}/measurements`}
+            className="px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            Mõõtmised
+          </Link>
+          <Link
             href={`/organizer/competition/${id}/ajakava`}
             className="px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           >

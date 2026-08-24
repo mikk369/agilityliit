@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useTranslation } from "@/i18n/LanguageContext";
 
 interface BookingDetail {
   id: number;
@@ -42,6 +43,7 @@ export default function CompetitionDetailPage({
 }) {
   const { id } = use(params);
   const { data: session } = useSession();
+  const { t, locale } = useTranslation();
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -73,7 +75,7 @@ export default function CompetitionDetailPage({
   if (!booking) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <p className="text-gray-500">Võistlust ei leitud.</p>
+        <p className="text-gray-500">{t.compDetailNotFound}</p>
       </div>
     );
   }
@@ -81,6 +83,11 @@ export default function CompetitionDetailPage({
   const isOpen = booking.regStatus !== "reg_closed";
   const isPast = new Date(booking.endDate) < new Date();
   const isCompetitor = session?.user?.role === "COMPETITOR";
+
+  // Show description based on language
+  const description = locale === "en" && booking.competitionInfo?.descriptionEng
+    ? booking.competitionInfo.descriptionEng
+    : booking.competitionInfo?.descriptionEst;
 
   // Group tracks by date
   const tracksByDate = booking.competitionTracks.reduce(
@@ -99,7 +106,7 @@ export default function CompetitionDetailPage({
         href="/competitions"
         className="text-sm text-blue-600 hover:text-blue-700 mb-4 inline-block"
       >
-        &larr; Tagasi võistluste juurde
+        &larr; {t.compDetailBack}
       </Link>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
@@ -110,17 +117,17 @@ export default function CompetitionDetailPage({
             </h1>
             <div className="space-y-1 text-sm text-gray-600">
               <p>
-                {formatDate(booking.startDate)}
+                {formatDate(booking.startDate, locale)}
                 {booking.startDate !== booking.endDate &&
-                  ` – ${formatDate(booking.endDate)}`}
+                  ` – ${formatDate(booking.endDate, locale)}`}
               </p>
               <p>{booking.location}</p>
               <p>{booking.competitionType}</p>
-              <p>Klubi: {booking.clubName}</p>
-              <p>E-post: {booking.email}</p>
-              <p>Telefon: {booking.phone}</p>
+              <p>{t.compDetailClub}: {booking.clubName}</p>
+              <p>{t.compDetailEmail}: {booking.email}</p>
+              <p>{t.compDetailPhone}: {booking.phone}</p>
               {booking.referee && booking.referee.length > 0 && (
-                <p>Kohtunikud: {booking.referee.join(", ")}</p>
+                <p>{t.compDetailJudges}: {booking.referee.join(", ")}</p>
               )}
             </div>
           </div>
@@ -133,7 +140,7 @@ export default function CompetitionDetailPage({
                     : "bg-red-100 text-red-700"
                 }`}
               >
-                {isOpen ? "Registreerimine avatud" : "Registreerimine suletud"}
+                {isOpen ? t.compDetailRegOpen : t.compDetailRegClosed}
               </span>
             )}
           </div>
@@ -145,54 +152,52 @@ export default function CompetitionDetailPage({
               href={`/competitor/register/${booking.id}`}
               className="inline-block px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Registreeru võistlusele
+              {t.compDetailRegister}
             </Link>
           </div>
         )}
       </div>
 
-      {booking.competitionInfo?.descriptionEst && (
+      {description && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
-            Võistluse info
+            {t.compDetailInfo}
           </h2>
           <div
             className="prose prose-sm max-w-none text-gray-700"
-            dangerouslySetInnerHTML={{
-              __html: booking.competitionInfo.descriptionEst,
-            }}
+            dangerouslySetInnerHTML={{ __html: description }}
           />
         </div>
       )}
 
       {Object.keys(tracksByDate).length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Rajad</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t.compDetailTracks}</h2>
           {Object.entries(tracksByDate)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([date, tracks]) => (
               <div key={date} className="mb-4 last:mb-0">
                 <h3 className="text-sm font-medium text-gray-500 mb-2">
-                  {formatDate(date)}
+                  {formatDate(date, locale)}
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200">
                         <th className="text-left py-2 px-3 font-medium text-gray-700">
-                          Rada
+                          {t.compDetailTrack}
                         </th>
                         <th className="text-left py-2 px-3 font-medium text-gray-700">
-                          Tüüp
+                          {t.compDetailType}
                         </th>
                         <th className="text-left py-2 px-3 font-medium text-gray-700">
-                          Suurus
+                          {t.compDetailSize}
                         </th>
                         <th className="text-left py-2 px-3 font-medium text-gray-700">
-                          Klass
+                          {t.compDetailClass}
                         </th>
                         <th className="text-left py-2 px-3 font-medium text-gray-700">
-                          Kohtunik
+                          {t.compDetailJudge}
                         </th>
                       </tr>
                     </thead>
@@ -206,7 +211,7 @@ export default function CompetitionDetailPage({
                             {track.letter}
                             {track.isRelay && (
                               <span className="ml-1 text-xs text-orange-600">
-                                (teateviis)
+                                {t.relay}
                               </span>
                             )}
                           </td>
@@ -229,6 +234,6 @@ export default function CompetitionDetailPage({
   );
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
+function formatDate(dateStr: string, locale: string) {
+  return new Date(dateStr).toLocaleDateString(locale === "en" ? "en-GB" : "et-EE");
 }

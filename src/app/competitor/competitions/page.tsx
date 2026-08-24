@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useTranslation } from "@/i18n/LanguageContext";
 
 interface MyRegistration {
   id: number;
@@ -35,6 +36,7 @@ interface MyRegistration {
 }
 
 export default function MyCompetitionsPage() {
+  const { t, locale } = useTranslation();
   const [registrations, setRegistrations] = useState<MyRegistration[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -49,30 +51,29 @@ export default function MyCompetitionsPage() {
       if (res.ok) {
         setRegistrations(await res.json());
       } else if (res.status === 404) {
-        // No handler yet
         setRegistrations([]);
       }
     } catch {
-      setMessage({ type: "error", text: "Andmete laadimine ebaõnnestus" });
+      setMessage({ type: "error", text: t.loadFailed });
     } finally {
       setLoading(false);
     }
   }
 
   async function handleCancel(id: number, dogName: string) {
-    if (!confirm(`Kas soovid tühistada registreerimise koeraga "${dogName}"?`)) return;
+    if (!confirm(t.myCompCancelConfirm(dogName))) return;
 
     try {
       const res = await fetch(`/api/competitors/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setMessage({ type: "success", text: "Registreering tühistatud" });
+        setMessage({ type: "success", text: t.myCompCancelled });
         fetchRegistrations();
       } else {
         const err = await res.json();
-        setMessage({ type: "error", text: err.error || "Tühistamine ebaõnnestus" });
+        setMessage({ type: "error", text: err.error || t.myCompCancelFailed });
       }
     } catch {
-      setMessage({ type: "error", text: "Serveri viga" });
+      setMessage({ type: "error", text: t.serverError });
     }
   }
 
@@ -98,12 +99,12 @@ export default function MyCompetitionsPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Minu võistlused</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t.myCompTitle}</h1>
         <Link
           href="/competitions"
           className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Registreeru võistlusele
+          {t.myCompRegister}
         </Link>
       </div>
 
@@ -121,22 +122,26 @@ export default function MyCompetitionsPage() {
 
       {registrations.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-          <p className="text-gray-500 mb-4">Sul pole ühtegi registreeringut.</p>
+          <p className="text-gray-500 mb-4">{t.myCompNoRegistrations}</p>
           <Link
             href="/competitions"
             className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors inline-block"
           >
-            Sirvi võistlusi
+            {t.myCompBrowse}
           </Link>
         </div>
       ) : (
         <>
           {upcoming.length > 0 && (
-            <Section title="Tulevased võistlused">
+            <Section title={t.myCompUpcoming}>
               {upcoming.map((r) => (
                 <RegistrationCard
                   key={r.id}
                   reg={r}
+                  locale={locale}
+                  statusAccepted={t.myCompAccepted}
+                  statusPending={t.myCompPending}
+                  cancelLabel={t.cancel}
                   onCancel={() => handleCancel(r.id, r.dog.nickName)}
                   canCancel={r.status === "PENDING"}
                 />
@@ -145,9 +150,17 @@ export default function MyCompetitionsPage() {
           )}
 
           {past.length > 0 && (
-            <Section title="Eelmised võistlused">
+            <Section title={t.myCompPast}>
               {past.map((r) => (
-                <RegistrationCard key={r.id} reg={r} canCancel={false} />
+                <RegistrationCard
+                  key={r.id}
+                  reg={r}
+                  locale={locale}
+                  statusAccepted={t.myCompAccepted}
+                  statusPending={t.myCompPending}
+                  cancelLabel={t.cancel}
+                  canCancel={false}
+                />
               ))}
             </Section>
           )}
@@ -168,10 +181,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function RegistrationCard({
   reg,
+  locale,
+  statusAccepted,
+  statusPending,
+  cancelLabel,
   onCancel,
   canCancel,
 }: {
   reg: MyRegistration;
+  locale: string;
+  statusAccepted: string;
+  statusPending: string;
+  cancelLabel: string;
   onCancel?: () => void;
   canCancel: boolean;
 }) {
@@ -183,12 +204,20 @@ function RegistrationCard({
             <h3 className="font-semibold text-gray-900">
               {reg.booking.organizerName}
             </h3>
-            <StatusBadge status={reg.status} />
+            {reg.status === "ACCEPTED" ? (
+              <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
+                {statusAccepted}
+              </span>
+            ) : (
+              <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full">
+                {statusPending}
+              </span>
+            )}
           </div>
           <p className="text-sm text-gray-600">
-            {formatDate(reg.booking.startDate)}
+            {formatDate(reg.booking.startDate, locale)}
             {reg.booking.startDate !== reg.booking.endDate &&
-              ` – ${formatDate(reg.booking.endDate)}`}
+              ` – ${formatDate(reg.booking.endDate, locale)}`}
             {" · "}
             {reg.booking.location}
           </p>
@@ -224,7 +253,7 @@ function RegistrationCard({
             onClick={onCancel}
             className="shrink-0 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >
-            Tühista
+            {cancelLabel}
           </button>
         )}
       </div>
@@ -232,21 +261,6 @@ function RegistrationCard({
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  if (status === "ACCEPTED") {
-    return (
-      <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
-        Kinnitatud
-      </span>
-    );
-  }
-  return (
-    <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full">
-      Ootel
-    </span>
-  );
-}
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
+function formatDate(dateStr: string, locale: string) {
+  return new Date(dateStr).toLocaleDateString(locale === "en" ? "en-GB" : "et-EE");
 }

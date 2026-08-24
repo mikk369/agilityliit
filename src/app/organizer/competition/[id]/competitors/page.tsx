@@ -158,14 +158,24 @@ export default function CompetitorTablePage({ params }: { params: Promise<{ id: 
           <h1 className="text-2xl font-bold text-gray-900">Võistlejad</h1>
           {bookingName && <p className="text-sm text-gray-600">{bookingName}</p>}
         </div>
-        {pendingCount > 0 && (
-          <button
-            onClick={handleAcceptAll}
-            className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
-          >
-            Kinnita kõik ({pendingCount})
-          </button>
-        )}
+        <div className="flex gap-2">
+          {competitors.length > 0 && (
+            <button
+              onClick={() => exportCompetitorsToExcel(bookingName, competitors)}
+              className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Excel
+            </button>
+          )}
+          {pendingCount > 0 && (
+            <button
+              onClick={handleAcceptAll}
+              className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Kinnita kõik ({pendingCount})
+            </button>
+          )}
+        </div>
       </div>
 
       {message && (
@@ -325,6 +335,35 @@ export default function CompetitorTablePage({ params }: { params: Promise<{ id: 
       )}
     </div>
   );
+}
+
+async function exportCompetitorsToExcel(bookingName: string, competitors: Competitor[]) {
+  const XLSX = await import("xlsx");
+  const data = [["Koerajuht", "Klubi", "Riik", "Koer", "Tõug", "Suurus (EST)", "Agility", "Jumping", "Rajad", "Staatus", "Märkused"]];
+
+  for (const c of competitors) {
+    const tracks = c.competitorTracks
+      .map((ct) => `${ct.competitionTrack.letter} (${ct.competitionTrack.trackType})`)
+      .join(", ");
+    data.push([
+      c.handler.handlerName,
+      c.handler.clubName || "",
+      c.handler.country || "",
+      c.dog.nickName,
+      c.dog.breed || "",
+      c.dog.sizeEst || "",
+      c.dog.agilityClass || "",
+      c.dog.jumpClass || "",
+      tracks,
+      c.status === "ACCEPTED" ? "Kinnitatud" : "Ootel",
+      c.remarks || "",
+    ]);
+  }
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb, ws, "Võistlejad");
+  XLSX.writeFile(wb, `Voistlejad_${bookingName}.xlsx`);
 }
 
 function FilterButton({

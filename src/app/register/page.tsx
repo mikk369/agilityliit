@@ -4,9 +4,11 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "@/i18n/LanguageContext";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,12 +21,12 @@ export default function RegisterPage() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Paroolid ei kattu");
+      setError(t.registerPasswordMismatch);
       return;
     }
 
     if (password.length < 6) {
-      setError("Parool peab olema vähemalt 6 tähemärki");
+      setError(t.registerPasswordTooShort);
       return;
     }
 
@@ -40,7 +42,7 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Registreerimine ebaõnnestus");
+        setError(data.error || t.registerFailed);
         setLoading(false);
         return;
       }
@@ -62,7 +64,7 @@ export default function RegisterPage() {
       router.push("/competitor");
       router.refresh();
     } catch {
-      setError("Serveri viga. Palun proovi uuesti.");
+      setError(t.registerServerError);
       setLoading(false);
     }
   };
@@ -72,7 +74,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
           <h1 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Registreeru
+            {t.registerTitle}
           </h1>
 
           {error && (
@@ -87,7 +89,7 @@ export default function RegisterPage() {
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                Nimi
+                {t.registerName}
               </label>
               <input
                 id="name"
@@ -96,7 +98,7 @@ export default function RegisterPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-                placeholder="Eesnimi Perenimi"
+                placeholder={t.registerNamePlaceholder}
               />
             </div>
 
@@ -105,7 +107,7 @@ export default function RegisterPage() {
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                E-post
+                {t.registerEmail}
               </label>
               <input
                 id="email"
@@ -114,7 +116,7 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-                placeholder="minu@email.ee"
+                placeholder={t.loginEmailPlaceholder}
               />
             </div>
 
@@ -123,7 +125,7 @@ export default function RegisterPage() {
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                Parool
+                {t.registerPassword}
               </label>
               <input
                 id="password"
@@ -132,7 +134,7 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-                placeholder="Vähemalt 6 tähemärki"
+                placeholder={t.registerPasswordPlaceholder}
               />
             </div>
 
@@ -141,7 +143,7 @@ export default function RegisterPage() {
                 htmlFor="confirmPassword"
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                Kinnita parool
+                {t.registerConfirmPassword}
               </label>
               <input
                 id="confirmPassword"
@@ -150,7 +152,7 @@ export default function RegisterPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-                placeholder="Sisesta parool uuesti"
+                placeholder={t.registerConfirmPlaceholder}
               />
             </div>
 
@@ -159,17 +161,17 @@ export default function RegisterPage() {
               disabled={loading}
               className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Registreerimine..." : "Registreeru"}
+              {loading ? t.registerLoading : t.registerSubmit}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">
-            On juba konto?{" "}
+            {t.registerHasAccount}{" "}
             <Link
               href="/login"
               className="text-blue-600 font-medium hover:text-blue-700"
             >
-              Logi sisse
+              {t.navLogin}
             </Link>
           </p>
         </div>

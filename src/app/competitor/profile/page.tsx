@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "@/i18n/LanguageContext";
 
 interface HandlerData {
   id?: number;
@@ -20,6 +21,7 @@ const COUNTRIES = [
 ];
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const [handler, setHandler] = useState<HandlerData>({
     handlerName: "",
     phone: "",
@@ -49,7 +51,7 @@ export default function ProfilePage() {
         setIsEditing(true);
       }
     } catch {
-      setMessage({ type: "error", text: "Andmete laadimine ebaõnnestus" });
+      setMessage({ type: "error", text: t.loadFailed });
     } finally {
       setLoading(false);
     }
@@ -73,13 +75,13 @@ export default function ProfilePage() {
         setHandler(data);
         setIsNew(false);
         setIsEditing(false);
-        setMessage({ type: "success", text: isNew ? "Profiil loodud!" : "Profiil uuendatud!" });
+        setMessage({ type: "success", text: isNew ? t.profileCreated : t.profileUpdated });
       } else {
         const err = await res.json();
-        setMessage({ type: "error", text: err.error || "Salvestamine ebaõnnestus" });
+        setMessage({ type: "error", text: err.error || t.saveFailed });
       }
     } catch {
-      setMessage({ type: "error", text: "Serveri viga" });
+      setMessage({ type: "error", text: t.serverError });
     } finally {
       setSaving(false);
     }
@@ -98,7 +100,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Minu andmed</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t.profileTitle}</h1>
 
       {message && (
         <div
@@ -115,46 +117,46 @@ export default function ProfilePage() {
       {!isEditing && !isNew ? (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <dl className="space-y-4">
-            <InfoRow label="Nimi" value={handler.handlerName} />
-            <InfoRow label="Telefon" value={handler.phone} />
-            <InfoRow label="E-post" value={handler.email} />
-            <InfoRow label="Klubi" value={handler.clubName} />
-            <InfoRow label="Riik" value={handler.country} />
+            <InfoRow label={t.profileName} value={handler.handlerName} />
+            <InfoRow label={t.profilePhone} value={handler.phone} />
+            <InfoRow label={t.profileEmail} value={handler.email} />
+            <InfoRow label={t.profileClub} value={handler.clubName} />
+            <InfoRow label={t.profileCountry} value={handler.country} />
           </dl>
           <button
             onClick={() => setIsEditing(true)}
             className="mt-6 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Muuda andmeid
+            {t.profileEdit}
           </button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
           <FormField
-            label="Nimi *"
+            label={t.profileNameRequired}
             value={handler.handlerName}
             onChange={(v) => setHandler({ ...handler, handlerName: v })}
             required
           />
           <FormField
-            label="Telefon"
+            label={t.profilePhone}
             value={handler.phone}
             onChange={(v) => setHandler({ ...handler, phone: v })}
             type="tel"
           />
           <FormField
-            label="E-post"
+            label={t.profileEmail}
             value={handler.email}
             onChange={(v) => setHandler({ ...handler, email: v })}
             type="email"
           />
           <FormField
-            label="Klubi"
+            label={t.profileClub}
             value={handler.clubName}
             onChange={(v) => setHandler({ ...handler, clubName: v })}
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Riik</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.profileCountry}</label>
             <select
               value={handler.country}
               onChange={(e) => setHandler({ ...handler, country: e.target.value })}
@@ -172,7 +174,7 @@ export default function ProfilePage() {
               disabled={saving}
               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              {saving ? "Salvestamine..." : isNew ? "Loo profiil" : "Salvesta"}
+              {saving ? t.saving : isNew ? t.profileCreate : t.save}
             </button>
             {!isNew && (
               <button
@@ -180,7 +182,7 @@ export default function ProfilePage() {
                 onClick={() => { setIsEditing(false); fetchHandler(); }}
                 className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors"
               >
-                Tühista
+                {t.cancel}
               </button>
             )}
           </div>

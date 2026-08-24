@@ -143,3 +143,108 @@ export const competitionTrackSchema = z.object({
 });
 
 export type CompetitionTrackInput = z.infer<typeof competitionTrackSchema>;
+
+// =========================================================================
+// TRACK PARAMETERS (track_results)
+// =========================================================================
+
+export const trackParameterSchema = z.object({
+  sizeGroup: z.string().min(1, "Suurusgrupp on kohustuslik"),
+  trackLength: z.number().nullable().optional(),
+  trackSpeed: z.number().nullable().optional(),
+  idealTime: z.number().nullable().optional(),
+  maxTime: z.number().nullable().optional(),
+});
+
+export type TrackParameterInput = z.infer<typeof trackParameterSchema>;
+
+// =========================================================================
+// COMPETITOR RESULTS
+// =========================================================================
+
+export const competitorResultSchema = z.object({
+  competitorId: z.number().int().positive(),
+  competitionTrackId: z.number().int().positive(),
+  timeSeconds: z.number().nullable().optional(),
+  faults: z.number().int().default(0),
+  isDsq: z.boolean().default(false),
+  isDns: z.boolean().default(false),
+  hasQualification: z.boolean().default(false),
+});
+
+export type CompetitorResultInput = z.infer<typeof competitorResultSchema>;
+
+// =========================================================================
+// START PROTOCOL
+// =========================================================================
+
+export const startProtocolEntrySchema = z.object({
+  competitorId: z.number().int().positive(),
+  competitionTrackId: z.number().int().positive(),
+  competitionDate: z.string().min(1),
+  size: z.string().min(1),
+  startNumber: z.number().int().default(0),
+  sortOrder: z.number().int().default(0),
+});
+
+export type StartProtocolEntryInput = z.infer<typeof startProtocolEntrySchema>;
+
+// =========================================================================
+// TEAMS
+// =========================================================================
+
+export const teamSchema = z.object({
+  competitionDate: z.string().min(1),
+  size: z.string().min(1),
+  trackType: z.string().optional(),
+  teamName: z.string().default(""),
+  sortOrder: z.number().int().default(0),
+  members: z.array(z.number().int().positive()).min(3).max(4),
+});
+
+export type TeamInput = z.infer<typeof teamSchema>;
+
+// =========================================================================
+// TEAM RESULTS
+// =========================================================================
+
+export const teamResultSchema = z.object({
+  teamId: z.number().int().positive(),
+  competitionTrackId: z.number().int().positive(),
+  timeSeconds: z.number().nullable().optional(),
+  faults: z.number().int().default(0),
+  isDsq: z.boolean().default(false),
+  isDns: z.boolean().default(false),
+  notes: z.string().optional(),
+});
+
+export type TeamResultInput = z.infer<typeof teamResultSchema>;
+
+// =========================================================================
+// AWARDINGS
+// =========================================================================
+
+export const awardingSchema = z.object({
+  name: z.string().min(1, "Nimi on kohustuslik"),
+  sortOrder: z.number().int().default(0),
+  tracks: z.array(z.object({
+    letter: z.string().min(1),
+    trackType: z.string().min(1),
+    competitionDate: z.string().min(1),
+  })).min(1, "Vähemalt üks rada on kohustuslik"),
+});
+
+export type AwardingInput = z.infer<typeof awardingSchema>;
+
+// =========================================================================
+// DOG MEASUREMENTS
+// =========================================================================
+
+export const dogMeasurementSchema = z.object({
+  dogId: z.number().int().positive(),
+  bookingId: z.number().int().positive(),
+  referee: z.string().default(""),
+  measurement: z.string().default(""),
+});
+
+export type DogMeasurementInput = z.infer<typeof dogMeasurementSchema>;
