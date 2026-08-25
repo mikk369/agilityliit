@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, use } from "react";
 import Link from "next/link";
+import { formatDate } from "@/lib/utils";
 
 interface TrackData {
   id: number;
@@ -641,6 +642,3 @@ function SaveIndicator({ status }: { status: "saving" | "saved" | "error" | unde
   return null;
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
-}

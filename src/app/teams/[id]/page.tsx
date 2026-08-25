@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import { formatDate } from "@/lib/utils";
 
 interface TeamMember {
   competitorId: number;
@@ -180,6 +181,3 @@ export default function PublicTeamsPage({ params }: { params: Promise<{ id: stri
   );
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
-}

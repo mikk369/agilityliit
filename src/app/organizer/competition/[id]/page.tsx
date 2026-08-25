@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SIZES, TRACK_TYPES, COMPETITION_CLASSES, TRACK_LETTERS } from "@/lib/constants";
 import type { Booking, CompetitionTrack } from "@/types";
+import { formatDate } from "@/lib/utils";
 
 const LETTERS = TRACK_LETTERS;
 
@@ -701,6 +702,3 @@ function FormField({
   );
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
-}

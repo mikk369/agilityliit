@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import type { CompetitionTrack } from "@/types";
+import { formatDate, sortResults } from "@/lib/utils";
 
 interface PublicResultHandler {
   id?: number;
@@ -237,22 +238,7 @@ function TrackResultCard({ data }: { data: TrackData }) {
   const { track, parameters, competitors } = data;
 
   // Sort: DNS/DSQ last, then by time ascending
-  const sorted = [...competitors].sort((a, b) => {
-    // DNS and DSQ go last
-    if (a.isDns || a.isDsq) {
-      if (b.isDns || b.isDsq) return 0;
-      return 1;
-    }
-    if (b.isDns || b.isDsq) return -1;
-
-    // Both have times — sort ascending
-    const timeA = a.timeSeconds ?? Infinity;
-    const timeB = b.timeSeconds ?? Infinity;
-    if (timeA !== timeB) return timeA - timeB;
-
-    // Same time — fewer faults first
-    return a.faults - b.faults;
-  });
+  const sorted = sortResults(competitors);
 
   // Calculate place numbers
   let place = 0;
@@ -514,17 +500,7 @@ function exportResultsToPDF(booking: ResultsBooking, tracks: TrackData[]) {
         html += `</tbody></table>`;
       }
 
-      const sorted = [...competitors].sort((a, b) => {
-        if (a.isDns || a.isDsq) {
-          if (b.isDns || b.isDsq) return 0;
-          return 1;
-        }
-        if (b.isDns || b.isDsq) return -1;
-        const ta = a.timeSeconds ?? Infinity;
-        const tb = b.timeSeconds ?? Infinity;
-        if (ta !== tb) return ta - tb;
-        return a.faults - b.faults;
-      });
+      const sorted = sortResults(competitors);
 
       html += `<table><thead><tr><th>Koht</th><th>Koerajuht</th><th>Koer</th><th>Suurus</th><th>Klass</th><th>Aeg</th><th>Vead</th><th>Puhas</th></tr></thead><tbody>`;
       let place = 0;
@@ -577,6 +553,3 @@ function getUniqueDates(tracks: TrackData[]): string[] {
   return Array.from(dateSet).sort();
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
-}

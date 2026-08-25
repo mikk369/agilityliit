@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { formatDate } from "@/lib/utils";
 
 interface BookingDetail {
   id: number;
@@ -232,8 +233,4 @@ export default function CompetitionDetailPage({
       )}
     </div>
   );
-}
-
-function formatDate(dateStr: string, locale: string) {
-  return new Date(dateStr).toLocaleDateString(locale === "en" ? "en-GB" : "et-EE");
 }

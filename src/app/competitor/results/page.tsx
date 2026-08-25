@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { formatDate } from "@/lib/utils";
 import type { DogResult } from "@/types";
 
 export default function ResultsPage() {
@@ -133,8 +134,4 @@ export default function ResultsPage() {
       )}
     </div>
   );
-}
-
-function formatDate(dateStr: string, locale: string) {
-  return new Date(dateStr).toLocaleDateString(locale === "en" ? "en-GB" : "et-EE");
 }

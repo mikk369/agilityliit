@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { formatDate } from "@/lib/utils";
 import type { DogRegistration, CompetitionTrack } from "@/types";
 
 interface BookingInfo {
@@ -516,8 +517,4 @@ export default function RegisterPage({
       )}
     </div>
   );
-}
-
-function formatDate(dateStr: string, locale: string) {
-  return new Date(dateStr).toLocaleDateString(locale === "en" ? "en-GB" : "et-EE");
 }

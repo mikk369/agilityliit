@@ -1,5 +1,16 @@
 # Changelog
 
+## Utility helpers (2026-08-25)
+
+Created `src/lib/utils.ts` with shared utility functions to replace duplicated logic across pages.
+
+| Helper | Replaces | Files updated |
+|--------|----------|---------------|
+| `formatDate(dateStr, locale?)` | Local `formatDate` functions with `toLocaleDateString` | 13 page files |
+| `sortResults(competitors)` | Duplicated DNS/DSQ/time/faults sort logic | `results/[id]/page.tsx` (2 instances) |
+
+---
+
 ## API auth helper (2026-08-25)
 
 Created `src/lib/api-auth.ts` with centralized auth helpers to replace repeated session/role check boilerplate across all API routes.

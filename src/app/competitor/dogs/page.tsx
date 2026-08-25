@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { formatDate } from "@/lib/utils";
 import type { Translations } from "@/i18n/translations/et";
 import { SIZES, AGILITY_CLASSES, JUMP_CLASSES } from "@/lib/constants";
 import type { Dog, ProgressionData } from "@/types";
@@ -679,8 +680,4 @@ function DogForm({
       </div>
     </form>
   );
-}
-
-function formatDate(dateStr: string, locale: string) {
-  return new Date(dateStr).toLocaleDateString(locale === "en" ? "en-GB" : "et-EE");
 }

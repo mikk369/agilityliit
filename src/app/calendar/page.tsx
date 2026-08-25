@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { formatDate } from "@/lib/utils";
 import "./calendar.css";
 import type { CalendarEvent } from "@/types";
 
@@ -334,8 +335,8 @@ export default function CalendarPage() {
                         </span>
                       </div>
                       <p>
-                        {new Date(event.start).toLocaleDateString(locale === "et" ? "et-EE" : "en-GB")}
-                        {event.start !== event.end && ` – ${new Date(event.end).toLocaleDateString(locale === "et" ? "et-EE" : "en-GB")}`}
+                        {formatDate(event.start, locale)}
+                        {event.start !== event.end && ` – ${formatDate(event.end, locale)}`}
                       </p>
                       {event.referee.length > 0 && (
                         <p>{locale === "et" ? "Kohtunik" : "Judge"}: {event.referee.join(", ")}</p>

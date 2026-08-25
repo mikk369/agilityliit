@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { formatDate } from "@/lib/utils";
 import type { MyRegistration } from "@/types";
 
 export default function MyCompetitionsPage() {
@@ -229,8 +230,4 @@ function RegistrationCard({
       </div>
     </div>
   );
-}
-
-function formatDate(dateStr: string, locale: string) {
-  return new Date(dateStr).toLocaleDateString(locale === "en" ? "en-GB" : "et-EE");
 }

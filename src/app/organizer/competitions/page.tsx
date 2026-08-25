@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { formatDate } from "@/lib/utils";
 
 interface Booking {
   id: number;
@@ -180,6 +181,3 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
-}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { formatDate } from "@/lib/utils";
 
 interface Handler {
   handlerName: string;
@@ -431,6 +432,3 @@ async function exportProtocolToExcel(booking: Booking, entries: ProtocolEntry[])
   XLSX.writeFile(wb, `Stardiprotokoll_${booking.organizerName}.xlsx`);
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
-}

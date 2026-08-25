@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { formatDate } from "@/lib/utils";
 
 interface Booking {
   id: number;
@@ -168,6 +169,3 @@ export default function ResultsOverviewPage({ params }: { params: Promise<{ id: 
   );
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("et-EE");
-}
