@@ -29,6 +29,7 @@ export default function NavBar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
+            <NavLink href="/calendar">{t.navCalendar}</NavLink>
             <NavLink href="/competitions">{t.navCompetitions}</NavLink>
             <NavLink href="/dog-statistics">{t.navStatistics}</NavLink>
 
@@ -117,6 +118,9 @@ export default function NavBar() {
         {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden pb-4 space-y-1">
+            <MobileLink href="/calendar" onClick={() => setMenuOpen(false)}>
+              {t.navCalendar}
+            </MobileLink>
             <MobileLink href="/competitions" onClick={() => setMenuOpen(false)}>
               {t.navCompetitions}
             </MobileLink>

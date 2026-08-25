@@ -20,6 +20,7 @@ const et = {
 
   // Nav
   navLogo: "Agility Liit",
+  navCalendar: "Võistluskalender",
   navCompetitions: "Võistlused",
   navStatistics: "Statistika",
   navOrganizer: "Korraldaja",

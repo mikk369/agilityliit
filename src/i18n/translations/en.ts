@@ -22,6 +22,7 @@ const en: Translations = {
 
   // Nav
   navLogo: "Agility Liit",
+  navCalendar: "Competition Calendar",
   navCompetitions: "Competitions",
   navStatistics: "Statistics",
   navOrganizer: "Organizer",
