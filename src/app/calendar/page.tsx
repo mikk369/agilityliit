@@ -4,20 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/LanguageContext";
 import "./calendar.css";
-
-interface CalendarEvent {
-  id: number;
-  clubName: string;
-  start: string;
-  end: string;
-  referee: string[];
-  competitionClasses: string;
-  competitionType: string;
-  description: string;
-  location: string;
-  regStatus: string | null;
-  status: string;
-}
+import type { CalendarEvent } from "@/types";
 
 const MONTHS_ET = [
   "Jaanuar", "Veebruar", "Märts", "Aprill",

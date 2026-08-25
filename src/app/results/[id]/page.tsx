@@ -2,15 +2,16 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import type { CompetitionTrack } from "@/types";
 
-interface Handler {
+interface PublicResultHandler {
   id?: number;
   handlerName: string;
   clubName: string | null;
   country?: string | null;
 }
 
-interface Dog {
+interface PublicResultDog {
   id?: number;
   nickName: string;
   sizeEst: string | null;
@@ -20,10 +21,10 @@ interface Dog {
   breed: string | null;
 }
 
-interface CompetitorResult {
+interface PublicCompetitorResult {
   competitorId: number;
-  handler: Handler;
-  dog: Dog;
+  handler: PublicResultHandler;
+  dog: PublicResultDog;
   timeSeconds: number | null;
   faults: number;
   isDsq: boolean;
@@ -41,26 +42,13 @@ interface TrackParameter {
   maxTime: number | null;
 }
 
-interface TrackInfo {
-  id: number;
-  competitionDate: string;
-  letter: string;
-  trackType: string;
-  size: string;
-  competitionType: string;
-  referee: string | null;
-  sizeStandard?: string | null;
-  sortOrder: number;
-  isRelay: boolean;
-}
-
 interface TrackData {
-  track: TrackInfo;
+  track: CompetitionTrack;
   parameters: TrackParameter[];
-  competitors: CompetitorResult[];
+  competitors: PublicCompetitorResult[];
 }
 
-interface Booking {
+interface ResultsBooking {
   id: number;
   organizerName: string;
   clubName: string;
@@ -72,7 +60,7 @@ interface Booking {
 }
 
 interface ResultsResponse {
-  booking: Booking;
+  booking: ResultsBooking;
   tracks: TrackData[];
 }
 
@@ -499,7 +487,7 @@ function TrackResultCard({ data }: { data: TrackData }) {
   );
 }
 
-function exportResultsToPDF(booking: Booking, tracks: TrackData[]) {
+function exportResultsToPDF(booking: ResultsBooking, tracks: TrackData[]) {
   let html = `<h1>Tulemused</h1>
     <h2>${booking.organizerName}</h2>
     <p>${formatDate(booking.startDate)}${booking.startDate !== booking.endDate ? ` – ${formatDate(booking.endDate)}` : ""} | ${booking.location}${booking.clubName ? ` | ${booking.clubName}` : ""} | ${booking.competitionType}</p>`;

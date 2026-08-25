@@ -4,48 +4,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SIZES, TRACK_TYPES, COMPETITION_CLASSES, TRACK_LETTERS } from "@/lib/constants";
-
-interface Booking {
-  id: number;
-  startDate: string;
-  endDate: string;
-  qualTime: string | null;
-  organizerName: string;
-  clubName: string;
-  email: string;
-  phone: string;
-  location: string;
-  referee: string[];
-  info: string | null;
-  competitionClasses: string | null;
-  competitionType: string;
-  status: string;
-  regStatus: string | null;
-  regCloseDate: string | null;
-  competitionInfo: CompetitionInfo | null;
-  competitionTracks: CompetitionTrack[];
-}
-
-interface CompetitionInfo {
-  id: number;
-  descriptionEst: string | null;
-  descriptionEng: string | null;
-  sponsorImages: unknown;
-  maxCompetitorsPerDay: Record<string, number> | null;
-}
-
-interface CompetitionTrack {
-  id: number;
-  competitionDate: string;
-  letter: string;
-  trackType: string;
-  size: string;
-  competitionType: string;
-  referee: string | null;
-  sizeStandard: string | null;
-  sortOrder: number;
-  isRelay: boolean;
-}
+import type { Booking, CompetitionTrack } from "@/types";
 
 const LETTERS = TRACK_LETTERS;
 

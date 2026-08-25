@@ -4,24 +4,12 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useTranslation } from "@/i18n/LanguageContext";
-
-interface Booking {
-  id: number;
-  startDate: string;
-  endDate: string;
-  organizerName: string;
-  clubName: string;
-  location: string;
-  competitionType: string;
-  status: string;
-  regStatus: string | null;
-  regCloseDate: string | null;
-}
+import type { BookingListItem } from "@/types";
 
 export default function CompetitionsPage() {
   const { data: session } = useSession();
   const { t, locale } = useTranslation();
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<BookingListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
 
@@ -125,7 +113,7 @@ function CompetitionCard({
   registerLabel,
   regCloseDateFn,
 }: {
-  booking: Booking;
+  booking: BookingListItem;
   locale: string;
   isLoggedIn: boolean;
   isCompetitor: boolean;

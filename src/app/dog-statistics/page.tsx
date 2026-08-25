@@ -2,46 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "@/i18n/LanguageContext";
+import type { StatResult, SearchResponse, StatFilters, AutocompleteField } from "@/types";
 
-interface StatResult {
-  competition_date: string;
-  track_type: string;
-  competition_type: string;
-  organizer: string;
-  judge: string;
-  breed: string;
-  dog_name: string;
-  handler_name: string;
-  points: number | null;
-  faults: number;
-  grade: string;
-  result: string;
-  place: number | null;
-}
-
-interface SearchResponse {
-  results: StatResult[];
-  total: number;
-  page: number;
-  per_page: number;
-  total_pages: number;
-}
-
-interface Filters {
-  organizer: string;
-  breed: string;
-  gender: string;
-  dog_name: string;
-  register_code: string;
-  handler_name: string;
-  judge: string;
-  date_from: string;
-  date_to: string;
-}
-
-type AutocompleteField = "dog_name" | "register_code" | "handler_name" | "judge";
-
-const initialFilters: Filters = {
+const initialFilters: StatFilters = {
   organizer: "",
   breed: "",
   gender: "",
@@ -55,7 +18,7 @@ const initialFilters: Filters = {
 
 export default function DogStatisticsPage() {
   const { t } = useTranslation();
-  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [filters, setStatFilters] = useState<StatFilters>(initialFilters);
   const [results, setResults] = useState<StatResult[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -151,8 +114,8 @@ export default function DogStatisticsPage() {
     [filters]
   );
 
-  const updateFilter = (field: keyof Filters, value: string) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
+  const updateFilter = (field: keyof StatFilters, value: string) => {
+    setStatFilters((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSearch = () => fetchResults(1, perPage);

@@ -2,35 +2,14 @@
 
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
+import type { CompetitionTrack } from "@/types";
 
-interface CompetitionTrack {
-  id: number;
-  competitionDate: string;
-  letter: string;
-  trackType: string;
-  size: string;
-  competitionType: string;
-}
-
-interface Competitor {
+interface ProtocolCompetitor {
   id: number;
   status: string;
-  handler: {
-    id: number;
-    handlerName: string;
-    clubName: string | null;
-  };
-  dog: {
-    id: number;
-    nickName: string;
-    sizeEst: string | null;
-    sizeFci: string | null;
-    agilityClass: string | null;
-    jumpClass: string | null;
-  };
-  competitorTracks: {
-    competitionTrack: CompetitionTrack;
-  }[];
+  handler: { id: number; handlerName: string; clubName: string | null };
+  dog: { id: number; nickName: string; sizeEst: string | null; sizeFci: string | null; agilityClass: string | null; jumpClass: string | null };
+  competitorTracks: { competitionTrack: CompetitionTrack }[];
 }
 
 interface ProtocolEntry {
@@ -41,7 +20,7 @@ interface ProtocolEntry {
   size: string;
   startNumber: number;
   sortOrder: number;
-  competitor?: Competitor;
+  competitor?: ProtocolCompetitor;
   competitionTrack?: CompetitionTrack;
 }
 
@@ -58,7 +37,7 @@ export default function ProtocolPage({ params }: { params: Promise<{ id: string 
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [bookingName, setBookingName] = useState("");
   const [tracks, setTracks] = useState<CompetitionTrack[]>([]);
-  const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [competitors, setCompetitors] = useState<ProtocolCompetitor[]>([]);
   const [protocolEntries, setProtocolEntries] = useState<ProtocolEntry[]>([]);
   const [published, setPublished] = useState(false);
   const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
@@ -85,7 +64,7 @@ export default function ProtocolPage({ params }: { params: Promise<{ id: string 
       }
 
       if (compRes.ok) {
-        const allCompetitors: Competitor[] = await compRes.json();
+        const allCompetitors: ProtocolCompetitor[] = await compRes.json();
         setCompetitors(allCompetitors.filter((c) => c.status === "ACCEPTED"));
       }
 
@@ -128,7 +107,7 @@ export default function ProtocolPage({ params }: { params: Promise<{ id: string 
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
   // Find competitor data for a protocol entry
-  function getCompetitorForEntry(entry: ProtocolEntry): Competitor | undefined {
+  function getCompetitorForEntry(entry: ProtocolEntry): ProtocolCompetitor | undefined {
     if (entry.competitor) return entry.competitor;
     return competitors.find((c) => c.id === entry.competitorId);
   }

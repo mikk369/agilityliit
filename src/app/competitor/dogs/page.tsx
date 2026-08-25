@@ -5,25 +5,7 @@ import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
 import type { Translations } from "@/i18n/translations/et";
 import { SIZES, AGILITY_CLASSES, JUMP_CLASSES } from "@/lib/constants";
-
-interface Dog {
-  id: number;
-  nickName: string;
-  officialName: string | null;
-  breed: string | null;
-  gender: string | null;
-  birthday: string | null;
-  sizeEst: string | null;
-  sizeFci: string | null;
-  agilityClass: string | null;
-  jumpClass: string | null;
-  registerCode: string | null;
-  idCode: string | null;
-  generalVaccinationEnd: string | null;
-  rabiesVaccinationEnd: string | null;
-  ownersName: string | null;
-  info: string | null;
-}
+import type { Dog, ProgressionData } from "@/types";
 
 
 const emptyDog: Omit<Dog, "id"> = {
@@ -245,30 +227,6 @@ export default function DogsPage() {
   );
 }
 
-interface ProgressionData {
-  dogId: number;
-  currentAgilityClass: string;
-  currentJumpClass: string;
-  agilityClearCount: number;
-  agilityRequired: number;
-  agilityNextClass: string | null;
-  agilityEligible: boolean;
-  agilityEligibleDate: string | null;
-  jumpClearCount: number;
-  jumpRequired: number;
-  jumpNextClass: string | null;
-  jumpEligible: boolean;
-  jumpEligibleDate: string | null;
-  seniorAgilityClearCount: number;
-  seniorJumpClearCount: number;
-  clearTracks: Array<{
-    competitionName: string;
-    trackName: string;
-    date: string;
-    timeSeconds: number;
-    faults: number;
-  }>;
-}
 
 function DogCard({
   dog,

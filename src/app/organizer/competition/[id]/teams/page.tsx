@@ -2,46 +2,9 @@
 
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
+import type { Team, TeamMember, TeamsResponse } from "@/types";
 
-interface Handler {
-  handlerName: string;
-  clubName: string | null;
-}
-
-interface Dog {
-  nickName: string;
-  sizeEst: string | null;
-  breed: string | null;
-}
-
-interface TeamMember {
-  id: number;
-  competitorId: number;
-  sortOrder: number;
-  competitor: {
-    id: number;
-    handler: Handler;
-    dog: Dog;
-  };
-}
-
-interface Team {
-  id?: number;
-  competitionDate: string;
-  size: string;
-  trackType: string | null;
-  teamName: string;
-  sortOrder: number;
-  members: TeamMember[];
-}
-
-interface TeamsResponse {
-  teamsLocked: number;
-  teamsPublished: number;
-  teams: Team[];
-}
-
-interface Competitor {
+interface TeamsPageCompetitor {
   id: number;
   status: string;
   handler: { id: number; handlerName: string; clubName: string | null };
@@ -84,7 +47,7 @@ export default function TeamsPage({ params }: { params: Promise<{ id: string }> 
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [bookingName, setBookingName] = useState("");
   const [teams, setTeams] = useState<Team[]>([]);
-  const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [competitors, setCompetitors] = useState<TeamsPageCompetitor[]>([]);
   const [locked, setLocked] = useState(false);
   const [published, setPublished] = useState(false);
   const [activeGroup, setActiveGroup] = useState<GroupKey | null>(null);
@@ -114,7 +77,7 @@ export default function TeamsPage({ params }: { params: Promise<{ id: string }> 
       }
 
       if (compRes.ok) {
-        const allComp: Competitor[] = await compRes.json();
+        const allComp: TeamsPageCompetitor[] = await compRes.json();
         setCompetitors(allComp.filter((c) => c.status === "ACCEPTED"));
       }
     } catch {
@@ -186,7 +149,7 @@ export default function TeamsPage({ params }: { params: Promise<{ id: string }> 
   }
 
   // Get unassigned competitors for the active group
-  function getPoolCompetitors(): Competitor[] {
+  function getPoolCompetitors(): TeamsPageCompetitor[] {
     if (!activeGroup) return [];
     const { date, size } = parseGroupKey(activeGroup);
     const assigned = getAssignedCompetitorIds();

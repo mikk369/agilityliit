@@ -3,37 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
-
-interface MyRegistration {
-  id: number;
-  status: string;
-  remarks: string | null;
-  booking: {
-    id: number;
-    startDate: string;
-    endDate: string;
-    organizerName: string;
-    location: string;
-    competitionType: string;
-    status: string;
-  };
-  dog: {
-    id: number;
-    nickName: string;
-    sizeEst: string | null;
-    agilityClass: string | null;
-    jumpClass: string | null;
-  };
-  competitorTracks: {
-    competitionTrack: {
-      letter: string;
-      trackType: string;
-      size: string;
-      competitionType: string;
-      competitionDate: string;
-    };
-  }[];
-}
+import type { MyRegistration } from "@/types";
 
 export default function MyCompetitionsPage() {
   const { t, locale } = useTranslation();

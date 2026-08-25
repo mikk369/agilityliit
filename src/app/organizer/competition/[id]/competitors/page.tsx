@@ -2,44 +2,11 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-
-interface Competitor {
-  id: number;
-  status: string;
-  remarks: string | null;
-  needsMeasurement: boolean;
-  needsCompetitionBook: boolean;
-  createdAt: string;
-  handler: {
-    id: number;
-    handlerName: string;
-    clubName: string | null;
-    country: string | null;
-  };
-  dog: {
-    id: number;
-    nickName: string;
-    sizeEst: string | null;
-    sizeFci: string | null;
-    agilityClass: string | null;
-    jumpClass: string | null;
-    breed: string | null;
-  };
-  competitorTracks: {
-    competitionTrack: {
-      id: number;
-      letter: string;
-      trackType: string;
-      size: string;
-      competitionType: string;
-      competitionDate: string;
-    };
-  }[];
-}
+import type { CompetitorEntry } from "@/types";
 
 export default function CompetitorTablePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [competitors, setCompetitors] = useState<CompetitorEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [filter, setFilter] = useState<"all" | "PENDING" | "ACCEPTED">("all");
@@ -337,7 +304,7 @@ export default function CompetitorTablePage({ params }: { params: Promise<{ id: 
   );
 }
 
-async function exportCompetitorsToExcel(bookingName: string, competitors: Competitor[]) {
+async function exportCompetitorsToExcel(bookingName: string, competitors: CompetitorEntry[]) {
   const XLSX = await import("xlsx");
   const data = [["Koerajuht", "Klubi", "Riik", "Koer", "Tõug", "Suurus (EST)", "Agility", "Jumping", "Rajad", "Staatus", "Märkused"]];
 

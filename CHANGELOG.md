@@ -1,5 +1,23 @@
 # Changelog
 
+## Shared type definitions (2025-08-25)
+
+Extracted duplicate inline interfaces into shared type files under `src/types/`. Pages now import from `@/types` instead of re-defining the same interfaces.
+
+| File | Types |
+|------|-------|
+| `types/booking.ts` | `Booking`, `BookingListItem`, `CompetitionTrack`, `CompetitionInfo`, `CalendarEvent` |
+| `types/dog.ts` | `Dog`, `DogSummary`, `DogRegistration`, `ProgressionData` |
+| `types/handler.ts` | `Handler`, `HandlerSummary`, `HandlerWithCountry` |
+| `types/competitor.ts` | `CompetitorResult`, `CompetitorEntry`, `ResultEntryCompetitor`, `DogResult`, `MyRegistration` |
+| `types/team.ts` | `Team`, `TeamMember`, `TeamsResponse` |
+| `types/statistics.ts` | `StatResult`, `SearchResponse`, `StatFilters`, `AutocompleteField` |
+| `types/index.ts` | Barrel export for all types |
+
+Updated pages: `competitor/dogs`, `competitor/results`, `competitor/competitions`, `competitor/register/[id]`, `competitions`, `calendar`, `dog-statistics`, `results/[id]`, `organizer/competition/[id]` (editor, competitors, protocol, measurements, teams).
+
+---
+
 ## Centralized constants (2025-08-25)
 
 Extracted all hardcoded magic strings and repeated arrays into a single `src/lib/constants.ts` file. All constants are typed with `as const` for proper type inference.

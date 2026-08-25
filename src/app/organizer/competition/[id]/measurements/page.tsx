@@ -2,22 +2,13 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import type { DogSummary } from "@/types";
 
-interface Dog {
-  id: number;
-  nickName: string;
-  sizeEst: string | null;
-  breed: string | null;
-}
-
-interface Competitor {
+interface MeasurementsCompetitor {
   id: number;
   status: string;
-  handler: {
-    id: number;
-    handlerName: string;
-  };
-  dog: Dog;
+  handler: { id: number; handlerName: string };
+  dog: DogSummary;
 }
 
 interface Measurement {
@@ -27,19 +18,14 @@ interface Measurement {
   referee: string;
   measurement: string;
   createdAt: string;
-  dog: {
-    id: number;
-    nickName: string;
-    sizeEst: string | null;
-    breed: string | null;
-  };
+  dog: DogSummary;
   handlerName?: string;
 }
 
 export default function MeasurementsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
-  const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [competitors, setCompetitors] = useState<MeasurementsCompetitor[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -72,7 +58,7 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
       }
 
       if (competitorsRes.ok) {
-        const comps: Competitor[] = await competitorsRes.json();
+        const comps: MeasurementsCompetitor[] = await competitorsRes.json();
         // Only accepted competitors
         setCompetitors(comps.filter((c) => c.status === "ACCEPTED"));
       }

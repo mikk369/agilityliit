@@ -3,24 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
-
-interface DogResult {
-  id: number;
-  dogNickName: string;
-  dogId: number;
-  bookingId: number;
-  bookingName: string;
-  bookingDate: string;
-  trackLetter: string;
-  trackType: string;
-  competitionType: string;
-  competitionDate: string;
-  timeSeconds: number | null;
-  faults: number;
-  isDsq: boolean;
-  isDns: boolean;
-  hasQualification: boolean;
-}
+import type { DogResult } from "@/types";
 
 export default function ResultsPage() {
   const { t, locale } = useTranslation();

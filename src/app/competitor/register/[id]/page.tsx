@@ -4,31 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
-
-interface Dog {
-  id: number;
-  nickName: string;
-  officialName: string | null;
-  sizeEst: string | null;
-  sizeFci: string | null;
-  agilityClass: string | null;
-  jumpClass: string | null;
-  registerCode: string | null;
-  idCode: string | null;
-  generalVaccinationEnd: string | null;
-  rabiesVaccinationEnd: string | null;
-}
-
-interface Track {
-  id: number;
-  competitionDate: string;
-  letter: string;
-  trackType: string;
-  size: string;
-  competitionType: string;
-  referee: string | null;
-  isRelay: boolean;
-}
+import type { DogRegistration, CompetitionTrack } from "@/types";
 
 interface BookingInfo {
   id: number;
@@ -38,7 +14,7 @@ interface BookingInfo {
   location: string;
   competitionType: string;
   regStatus: string | null;
-  competitionTracks: Track[];
+  competitionTracks: CompetitionTrack[];
 }
 
 export default function RegisterPage({
@@ -53,7 +29,7 @@ export default function RegisterPage({
 
   const [step, setStep] = useState(1);
   const [booking, setBooking] = useState<BookingInfo | null>(null);
-  const [dogs, setDogs] = useState<Dog[]>([]);
+  const [dogs, setDogs] = useState<DogRegistration[]>([]);
   const [hasHandler, setHasHandler] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -90,7 +66,7 @@ export default function RegisterPage({
 
   const selectedDog = dogs.find((d) => d.id === selectedDogId);
 
-  function isVaccinationValid(dog: Dog) {
+  function isVaccinationValid(dog: DogRegistration) {
     if (!booking) return false;
     const competitionStart = new Date(booking.startDate);
     const generalOk =
@@ -191,7 +167,7 @@ export default function RegisterPage({
       acc[date].push(track);
       return acc;
     },
-    {} as Record<string, Track[]>
+    {} as Record<string, CompetitionTrack[]>
   );
 
   return (
