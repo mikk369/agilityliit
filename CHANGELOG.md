@@ -1,5 +1,27 @@
 # Changelog
 
+## API auth helper (2026-08-25)
+
+Created `src/lib/api-auth.ts` with centralized auth helpers to replace repeated session/role check boilerplate across all API routes.
+
+| Helper | Purpose |
+|--------|---------|
+| `requireAuth()` | Returns session or 401 response |
+| `requireRole(...roles)` | Returns session or 401/403 response |
+| `isOrganizerOrAdmin(session)` | Boolean helper for inline checks |
+
+**Updated 25 API route files (~29 handler functions):**
+
+| Pattern | Count | Routes |
+|---------|-------|--------|
+| `requireRole("ORGANIZER", "ADMIN")` | 18 files | results, teams, start-protocol, awardings, dog-measurements, competitors, bookings POST, handlers search, dogs search |
+| `requireRole("ADMIN")` | 1 file | booking status change |
+| `requireAuth()` | 13 files | handlers/me, dogs, competitors, results/my, dog-progression, bookings PATCH/DELETE, competition tracks/info write |
+
+**Not changed:** `GET /api/bookings` (conditional `mine=true` auth) and all public routes (calendar, statistics, public results/protocol/teams).
+
+---
+
 ## Shared type definitions (2025-08-25)
 
 Extracted duplicate inline interfaces into shared type files under `src/types/`. Pages now import from `@/types` instead of re-defining the same interfaces.

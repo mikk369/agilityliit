@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { dogUpdateSchema } from "@/lib/validations";
 
@@ -9,10 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Autentimata" }, { status: 401 });
-    }
+    const { session, response } = await requireAuth();
+    if (response) return response;
 
     const { id } = await params;
     const dog = await prisma.dog.findUnique({
@@ -42,10 +39,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Autentimata" }, { status: 401 });
-    }
+    const { session, response } = await requireAuth();
+    if (response) return response;
 
     const { id } = await params;
     const dogId = parseInt(id);
@@ -104,10 +99,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Autentimata" }, { status: 401 });
-    }
+    const { session, response } = await requireAuth();
+    if (response) return response;
 
     const { id } = await params;
     const dogId = parseInt(id);

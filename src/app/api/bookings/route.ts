@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { requireRole } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { bookingSchema } from "@/lib/validations";
 
@@ -47,13 +48,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Autentimata" }, { status: 401 });
-    }
-    if (session.user.role !== "ORGANIZER" && session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Keelatud" }, { status: 403 });
-    }
+    const { session, response } = await requireRole("ORGANIZER", "ADMIN");
+    if (response) return response;
 
     const body = await req.json();
     const parsed = bookingSchema.safeParse(body);

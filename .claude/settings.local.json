@@ -13,7 +13,11 @@
       "Bash(find \"C:/Users/itsal/Desktop/agility project/agiliit/src/app\" -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) 2>/dev/null | head -20)",
       "Bash(find \"C:/Users/itsal/Desktop/agility project/agiliit/src/app\" -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) 2>/dev/null | wc -l)",
       "Bash(cd \"C:\\\\Users\\\\itsal\\\\Desktop\\\\agility project\\\\agiliit\" && npx tsc --noEmit 2>&1 | grep -v \"ExperimentalWarning\" | head -40)",
-      "Bash(cd \"C:\\\\Users\\\\itsal\\\\Desktop\\\\agility project\\\\agiliit\" && npx tsc --noEmit 2>&1 | grep -v \"ExperimentalWarning\" | grep \"error\" | head -20)"
+      "Bash(cd \"C:\\\\Users\\\\itsal\\\\Desktop\\\\agility project\\\\agiliit\" && npx tsc --noEmit 2>&1 | grep -v \"ExperimentalWarning\" | grep \"error\" | head -20)",
+      "Bash(cd \"C:\\\\Users\\\\itsal\\\\Desktop\\\\agility project\\\\agiliit\" && npx tsc --noEmit --pretty 2>&1 | head -50)",
+      "Bash(cd \"C:/Users/itsal/Desktop/agility project/agiliit\" && npx tsc --noEmit 2>&1 | head -30)",
+      "Bash(cd \"C:/Users/itsal/Desktop/agility project/agiliit\" && npx tsc --noEmit 2>&1 | tail -20)",
+      "Bash(ls \"C:/Users/itsal/Desktop/agility project/agiliit/\"*.md)"
     ]
   }
 }

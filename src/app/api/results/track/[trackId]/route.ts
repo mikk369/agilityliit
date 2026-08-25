@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireRole } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 
 export async function GET(
@@ -8,13 +7,8 @@ export async function GET(
   { params }: { params: Promise<{ trackId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Autentimata" }, { status: 401 });
-    }
-    if (session.user.role !== "ORGANIZER" && session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Keelatud" }, { status: 403 });
-    }
+    const { response } = await requireRole("ORGANIZER", "ADMIN");
+    if (response) return response;
 
     const { trackId } = await params;
     const id = parseInt(trackId);

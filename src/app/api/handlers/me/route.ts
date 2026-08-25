@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { handlerSchema, handlerUpdateSchema } from "@/lib/validations";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Autentimata" }, { status: 401 });
-    }
+    const { session, response } = await requireAuth();
+    if (response) return response;
 
     const handler = await prisma.handler.findUnique({
       where: { userId: parseInt(session.user.id) },
@@ -30,10 +27,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Autentimata" }, { status: 401 });
-    }
+    const { session, response } = await requireAuth();
+    if (response) return response;
 
     const userId = parseInt(session.user.id);
 
@@ -75,10 +70,8 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Autentimata" }, { status: 401 });
-    }
+    const { session, response } = await requireAuth();
+    if (response) return response;
 
     const userId = parseInt(session.user.id);
 
