@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { formatDate } from "@/lib/utils";
 import type { DogResult } from "@/types";
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
 export default function ResultsPage() {
   const { t, locale } = useTranslation();
@@ -27,16 +28,7 @@ export default function ResultsPage() {
     load();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-48" />
-          <div className="h-32 bg-gray-200 rounded" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton />;
 
   // Group results by dog
   const byDog: Record<string, DogResult[]> = {};

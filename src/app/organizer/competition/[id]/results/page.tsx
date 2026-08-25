@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
 interface Booking {
   id: number;
@@ -59,16 +60,7 @@ export default function ResultsOverviewPage({ params }: { params: Promise<{ id: 
     fetchData();
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-64" />
-          <div className="h-48 bg-gray-200 rounded" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton titleWidth="w-64" blockHeight="h-48" />;
 
   if (error || !booking) {
     return (

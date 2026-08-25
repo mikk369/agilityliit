@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
 interface Booking {
   id: number;
@@ -44,17 +46,7 @@ export default function OrganizerCompetitionsPage() {
   const past = bookings.filter((b) => new Date(b.endDate) < now);
   const displayed = filter === "upcoming" ? upcoming : past;
 
-  if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-48" />
-          <div className="h-32 bg-gray-200 rounded" />
-          <div className="h-32 bg-gray-200 rounded" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton blocks={2} />;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -164,20 +156,6 @@ function CompetitionCard({ booking }: { booking: Booking }) {
         </div>
       </div>
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; className: string }> = {
-    BOOKED: { label: "Kinnitatud", className: "bg-green-100 text-green-700" },
-    PENDING: { label: "Ootel", className: "bg-yellow-100 text-yellow-700" },
-    CLUBEVENT: { label: "Klubiüritus", className: "bg-purple-100 text-purple-700" },
-  };
-  const info = map[status] || { label: status, className: "bg-gray-100 text-gray-600" };
-  return (
-    <span className={`text-xs px-2 py-0.5 rounded-full ${info.className}`}>
-      {info.label}
-    </span>
   );
 }
 

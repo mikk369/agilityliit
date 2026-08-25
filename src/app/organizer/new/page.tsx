@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { COMPETITION_TYPES } from "@/lib/constants";
+import { MessageBanner } from "@/components/ui/MessageBanner";
 
 export default function NewCompetitionPage() {
   const router = useRouter();
@@ -77,17 +78,7 @@ export default function NewCompetitionPage() {
     <div className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Registreeri uus võistlus</h1>
 
-      {message && (
-        <div
-          className={`mb-4 p-3 rounded-lg text-sm ${
-            message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+      <MessageBanner message={message} />
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
         {/* Basic info */}

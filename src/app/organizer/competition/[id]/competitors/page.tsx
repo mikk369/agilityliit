@@ -3,6 +3,8 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import type { CompetitorEntry } from "@/types";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { MessageBanner } from "@/components/ui/MessageBanner";
 
 export default function CompetitorTablePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -145,17 +147,7 @@ export default function CompetitorTablePage({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
-      {message && (
-        <div
-          className={`mb-4 p-3 rounded-lg text-sm ${
-            message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+      <MessageBanner message={message} />
 
       {/* Filters */}
       <div className="flex gap-2 mb-6">
@@ -353,20 +345,5 @@ function FilterButton({
     >
       {children}
     </button>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  if (status === "ACCEPTED") {
-    return (
-      <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
-        Kinnitatud
-      </span>
-    );
-  }
-  return (
-    <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full">
-      Ootel
-    </span>
   );
 }

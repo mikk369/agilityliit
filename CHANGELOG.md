@@ -1,5 +1,19 @@
 # Changelog
 
+## Reusable UI components (2026-08-25)
+
+Created shared UI components in `src/components/ui/` to replace duplicated patterns across pages.
+
+| Component | Replaces | Files updated |
+|-----------|----------|---------------|
+| `MessageBanner` | Inline `{message && <div className={...}>}` success/error banners | 8 page files |
+| `LoadingSkeleton` | Inline `animate-pulse` skeleton loading blocks | 9 page files |
+| `StatusBadge` | Local `StatusBadge` functions with status-to-color mapping | 2 page files |
+
+Skipped: `ConfirmModal` (all pages use native `window.confirm()` — no benefit), `PageHeader` (patterns too varied across pages).
+
+---
+
 ## Utility helpers (2026-08-25)
 
 Created `src/lib/utils.ts` with shared utility functions to replace duplicated logic across pages.

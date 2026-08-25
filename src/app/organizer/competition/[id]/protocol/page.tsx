@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import type { CompetitionTrack } from "@/types";
+import { MessageBanner } from "@/components/ui/MessageBanner";
 
 interface ProtocolCompetitor {
   id: number;
@@ -342,17 +343,7 @@ export default function ProtocolPage({ params }: { params: Promise<{ id: string 
       </div>
 
       {/* Message */}
-      {message && (
-        <div
-          className={`mb-4 p-3 rounded-lg text-sm ${
-            message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+      <MessageBanner message={message} />
 
       {/* Track selector */}
       {tracks.length === 0 ? (

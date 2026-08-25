@@ -7,6 +7,8 @@ import { formatDate } from "@/lib/utils";
 import type { Translations } from "@/i18n/translations/et";
 import { SIZES, AGILITY_CLASSES, JUMP_CLASSES } from "@/lib/constants";
 import type { Dog, ProgressionData } from "@/types";
+import { MessageBanner } from "@/components/ui/MessageBanner";
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
 
 const emptyDog: Omit<Dog, "id"> = {
@@ -134,16 +136,7 @@ export default function DogsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-48" />
-          <div className="h-40 bg-gray-200 rounded" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton blockHeight="h-40" />;
 
   if (!hasHandler) {
     return (
@@ -176,17 +169,7 @@ export default function DogsPage() {
         )}
       </div>
 
-      {message && (
-        <div
-          className={`mb-4 p-3 rounded-lg text-sm ${
-            message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+      <MessageBanner message={message} />
 
       {showForm && (
         <DogForm

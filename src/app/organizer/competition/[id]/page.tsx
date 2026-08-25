@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { SIZES, TRACK_TYPES, COMPETITION_CLASSES, TRACK_LETTERS } from "@/lib/constants";
 import type { Booking, CompetitionTrack } from "@/types";
 import { formatDate } from "@/lib/utils";
+import { MessageBanner } from "@/components/ui/MessageBanner";
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
 const LETTERS = TRACK_LETTERS;
 
@@ -210,16 +212,7 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
     }
   }
 
-  if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-64" />
-          <div className="h-48 bg-gray-200 rounded" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton titleWidth="w-64" blockHeight="h-48" />;
 
   if (!booking) {
     return (
@@ -295,17 +288,7 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      {message && (
-        <div
-          className={`mb-4 p-3 rounded-lg text-sm ${
-            message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+      <MessageBanner message={message} />
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-gray-200">

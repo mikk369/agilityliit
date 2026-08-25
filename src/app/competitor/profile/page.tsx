@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { COUNTRIES } from "@/lib/constants";
+import { MessageBanner } from "@/components/ui/MessageBanner";
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
 interface HandlerData {
   id?: number;
@@ -80,32 +82,13 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-48" />
-          <div className="h-40 bg-gray-200 rounded" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton blockHeight="h-40" />;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">{t.profileTitle}</h1>
 
-      {message && (
-        <div
-          className={`mb-4 p-3 rounded-lg text-sm ${
-            message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+      <MessageBanner message={message} />
 
       {!isEditing && !isNew ? (
         <div className="bg-white rounded-xl border border-gray-200 p-6">

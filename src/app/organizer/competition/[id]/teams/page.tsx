@@ -3,6 +3,8 @@
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import type { Team, TeamMember, TeamsResponse } from "@/types";
+import { MessageBanner } from "@/components/ui/MessageBanner";
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
 interface TeamsPageCompetitor {
   id: number;
@@ -383,17 +385,7 @@ export default function TeamsPage({ params }: { params: Promise<{ id: string }> 
     }
   }
 
-  if (loading) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-64" />
-          <div className="h-10 bg-gray-200 rounded w-96" />
-          <div className="h-64 bg-gray-200 rounded" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton titleWidth="w-64" blocks={2} blockHeight="h-64" />;
 
   const groupTeams = getGroupTeams();
   const poolCompetitors = getPoolCompetitors();
@@ -466,17 +458,7 @@ export default function TeamsPage({ params }: { params: Promise<{ id: string }> 
       </div>
 
       {/* Message */}
-      {message && (
-        <div
-          className={`mb-4 p-3 rounded-lg text-sm ${
-            message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+      <MessageBanner message={message} />
 
       {/* No groups */}
       {sortedGroupKeys.length === 0 ? (

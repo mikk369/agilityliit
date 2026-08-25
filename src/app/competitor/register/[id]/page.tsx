@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { formatDate } from "@/lib/utils";
 import type { DogRegistration, CompetitionTrack } from "@/types";
+import { MessageBanner } from "@/components/ui/MessageBanner";
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
 interface BookingInfo {
   id: number;
@@ -113,16 +115,7 @@ export default function RegisterPage({
     }
   }
 
-  if (loading) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-64" />
-          <div className="h-64 bg-gray-200 rounded" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton titleWidth="w-64" blockHeight="h-64" />;
 
   if (!booking) {
     return (
@@ -189,17 +182,7 @@ export default function RegisterPage({
         {" · "}{booking.location}
       </p>
 
-      {message && (
-        <div
-          className={`mb-4 p-3 rounded-lg text-sm ${
-            message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+      <MessageBanner message={message} />
 
       {/* Steps indicator */}
       <div className="flex items-center gap-2 mb-6">
