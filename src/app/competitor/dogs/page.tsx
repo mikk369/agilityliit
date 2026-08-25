@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
 import type { Translations } from "@/i18n/translations/et";
+import { SIZES, AGILITY_CLASSES, JUMP_CLASSES } from "@/lib/constants";
 
 interface Dog {
   id: number;
@@ -24,9 +25,6 @@ interface Dog {
   info: string | null;
 }
 
-const SIZES = ["XS", "S", "M", "SL", "L"];
-const AGILITY_CLASSES = ["", "A0", "A1", "A2", "A3"];
-const JUMP_CLASSES = ["H0", "H1", "H2", "H3"];
 
 const emptyDog: Omit<Dog, "id"> = {
   nickName: "",

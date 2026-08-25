@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { COUNTRIES } from "@/lib/constants";
 
 interface HandlerData {
   id?: number;
@@ -11,14 +12,6 @@ interface HandlerData {
   clubName: string;
   country: string;
 }
-
-const COUNTRIES = [
-  "EST", "FIN", "LAT", "LTU", "SWE", "NOR", "DNK", "DEU", "POL", "CZE",
-  "SVK", "HUN", "AUT", "CHE", "FRA", "GBR", "IRL", "NLD", "BEL", "ITA",
-  "ESP", "PRT", "ROU", "BGR", "HRV", "SRB", "SVN", "BIH", "MNE", "MKD",
-  "ALB", "GRC", "TUR", "UKR", "BLR", "MDA", "RUS", "GEO", "ARM", "AZE",
-  "KAZ", "ISL", "LUX", "MLT", "CYP",
-];
 
 export default function ProfilePage() {
   const { t } = useTranslation();

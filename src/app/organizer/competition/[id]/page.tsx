@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { SIZES, TRACK_TYPES, COMPETITION_CLASSES, TRACK_LETTERS } from "@/lib/constants";
 
 interface Booking {
   id: number;
@@ -46,10 +47,7 @@ interface CompetitionTrack {
   isRelay: boolean;
 }
 
-const SIZES = ["XS", "S", "M", "SL", "L"];
-const TRACK_TYPES = ["agility", "jumping"];
-const COMPETITION_CLASSES = ["A0", "A1", "A2", "A3"];
-const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+const LETTERS = TRACK_LETTERS;
 
 export default function CompetitionEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

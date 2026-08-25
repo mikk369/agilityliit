@@ -1,5 +1,29 @@
 # Changelog
 
+## Centralized constants (2025-08-25)
+
+Extracted all hardcoded magic strings and repeated arrays into a single `src/lib/constants.ts` file. All constants are typed with `as const` for proper type inference.
+
+| Constant | Previously defined in |
+|----------|----------------------|
+| `SIZES` | `competitor/dogs/page.tsx`, `organizer/competition/[id]/page.tsx` |
+| `AGILITY_CLASSES` | `competitor/dogs/page.tsx` |
+| `JUMP_CLASSES` | `competitor/dogs/page.tsx` |
+| `COMPETITION_CLASSES` | `organizer/competition/[id]/page.tsx` |
+| `TRACK_TYPES` | `organizer/competition/[id]/page.tsx` |
+| `TRACK_LETTERS` | `organizer/competition/[id]/page.tsx` (was `LETTERS`) |
+| `COMPETITION_TYPES` | `organizer/new/page.tsx` |
+| `COUNTRIES` | `competitor/profile/page.tsx` |
+| `BOOKING_STATUSES` | scattered string literals |
+| `COMPETITOR_STATUSES` | scattered string literals |
+| `USER_ROLES` | scattered string literals |
+| `REG_STATUS_OPEN/CLOSED` | scattered string literals |
+| `SIZE_STANDARDS` | scattered string literals |
+
+Exported types: `Size`, `SizeStandard`, `TrackType`, `BookingStatus`, `CompetitorStatus`, `UserRole`.
+
+---
+
 ## Competition calendar — ported from vite-event-calendar (2026-08-25)
 
 The yearly competition calendar from the old Vite-based WordPress plugin (`vite-event-calendar`) has been ported into the Next.js app as a standalone page at `/calendar`. Uses pure React with zero external calendar dependencies — the original FullCalendar library was replaced with a custom-built month grid and modal detail view.

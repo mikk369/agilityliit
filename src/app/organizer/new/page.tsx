@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const COMPETITION_TYPES = [
-  "Ametlik võistlus",
-  "Mitteametlik võistlus",
-  "Klubiüritus",
-  "Treening",
-];
+import { COMPETITION_TYPES } from "@/lib/constants";
 
 export default function NewCompetitionPage() {
   const router = useRouter();
