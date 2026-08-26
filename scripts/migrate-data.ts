@@ -30,7 +30,7 @@ const NEW_DB_CONFIG = {
   host: "localhost",
   user: "root",
   password: "",
-  database: "agilityliit",
+  database: "agliit",
   charset: "utf8mb4",
 };
 

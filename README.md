@@ -2,7 +2,7 @@
 
 Estonian agility dog competition management system built with Next.js. Replaces the previous WordPress-based two-repo system (organizerPahe + vite-event-calendar).
 
-Live: `agilityliit.ee`
+Live: `agliit.agilityliit.ee`
 
 ## Tech Stack
 
@@ -31,7 +31,7 @@ npm install
 Create `.env`:
 
 ```env
-DATABASE_URL="mysql://root:@localhost:3306/agilityliit"
+DATABASE_URL="mysql://root:@localhost:3306/agliit"
 NEXTAUTH_SECRET="your-random-secret"
 NEXTAUTH_URL="http://localhost:3000"
 ```

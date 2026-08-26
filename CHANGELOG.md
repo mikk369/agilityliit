@@ -1,5 +1,24 @@
 # Changelog
 
+## Rename to agliit (2026-08-26)
+
+Renamed the app and its identifiers from `agilityliit`/`agiliit` to `agliit`, matching the new domain. The federation's WordPress site keeps its own domain `agilityliit.ee` — the app moves to the `agliit.agilityliit.ee` subdomain under it.
+
+| Area | File | Change |
+|------|------|--------|
+| Package | `package.json`, `package-lock.json` | `agility-nextjs-temp` → `agliit` |
+| Database | `.env`, `scripts/migrate-data.ts`, `README.md` | Target DB → `agliit` (was inconsistent: `.env` said `agiliit`, README and migration script said `agilityliit`) |
+| Domains | `.env`, `integration-plan.md` | Test URL → `agliit.webcodes.ee`, production → `agliit.agilityliit.ee` |
+| Docs | `README.md`, `REBUILD-PLAN.md` | Live URL, deploy target, env examples, folder tree |
+
+`agility` on its own is the sport, not the brand, so `agilityClass` in the Prisma schema, `AGILITY_CLASSES`, and all domain terminology in `src/**` are untouched. The displayed federation name ("Eesti Agility Liit" / "Estonian Agility Association" in `layout.tsx` and the i18n translations) is also unchanged — that is the organisation's real name, not the app's.
+
+Verified with `npx tsc --noEmit` and `npm run build` — clean, all routes unchanged.
+
+**Not changed (needs manual steps):** the MySQL database itself still has its old name — MySQL has no `RENAME DATABASE`, so it needs a dump/restore or a fresh `prisma db push`. The GitHub repo rename and the `git remote set-url` that follows it, and the local folder rename, are also outstanding.
+
+---
+
 ## Split large page files (2026-08-26)
 
 Broke up the four largest page components listed in `refactoring-plan.md`. Components are co-located next to their route — in App Router only `page.tsx`/`route.ts` become routes, so sibling files are safe.
