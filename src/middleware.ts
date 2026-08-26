@@ -42,20 +42,23 @@ export default withAuth(
           pathname === "/" ||
           pathname.startsWith("/login") ||
           pathname.startsWith("/register") ||
-          pathname.startsWith("/calendar") ||
+          pathname.startsWith("/forgot-password") ||
+          pathname.startsWith("/reset-password") ||
           pathname.startsWith("/competitions") ||
           pathname.startsWith("/results") ||
           pathname.startsWith("/start-protocol") ||
           pathname.startsWith("/teams") ||
           pathname.startsWith("/dog-statistics") ||
           pathname.startsWith("/not-allowed") ||
-          pathname.startsWith("/api/auth")
+          pathname.startsWith("/api/auth") ||
+          // Public feed read by the WordPress calendar on agilityliit.ee
+          pathname.startsWith("/api/public")
         ) {
           return true;
         }
 
-        // Protected routes — require token
-        return !!token;
+        // Protected routes — require a token that has not been revoked
+        return !!token && !token.revoked;
       },
     },
   }

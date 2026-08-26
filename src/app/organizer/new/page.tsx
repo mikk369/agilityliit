@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { COMPETITION_TYPES } from "@/lib/constants";
 import { MessageBanner } from "@/components/ui/MessageBanner";
 
 export default function NewCompetitionPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [referees, setReferees] = useState<string[]>([""]);
@@ -230,29 +233,32 @@ export default function NewCompetitionPage() {
           </div>
         </div>
 
-        {/* Status */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Staatus</h2>
-          <div className="flex gap-4">
-            {[
-              { value: "PENDING", label: "Ootel" },
-              { value: "BOOKED", label: "Kinnitatud" },
-              { value: "CLUBEVENT", label: "Klubiüritus" },
-            ].map((opt) => (
-              <label key={opt.value} className="flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="status"
-                  value={opt.value}
-                  checked={form.status === opt.value}
-                  onChange={(e) => update("status", e.target.value)}
-                  className="text-blue-600"
-                />
-                {opt.label}
-              </label>
-            ))}
+        {/* Status — admin only: an organizer's booking is a request, and the
+            admin confirms it (PENDING -> BOOKED) or files a club event. */}
+        {isAdmin && (
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Staatus</h2>
+            <div className="flex gap-4">
+              {[
+                { value: "PENDING", label: "Ootel" },
+                { value: "BOOKED", label: "Kinnitatud" },
+                { value: "CLUBEVENT", label: "Klubiüritus" },
+              ].map((opt) => (
+                <label key={opt.value} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="status"
+                    value={opt.value}
+                    checked={form.status === opt.value}
+                    onChange={(e) => update("status", e.target.value)}
+                    className="text-blue-600"
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Additional info */}
         <div>

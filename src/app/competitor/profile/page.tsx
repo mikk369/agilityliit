@@ -5,6 +5,7 @@ import { useTranslation } from "@/i18n/LanguageContext";
 import { COUNTRIES } from "@/lib/constants";
 import { MessageBanner } from "@/components/ui/MessageBanner";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { ChangePasswordCard } from "@/components/ChangePasswordCard";
 
 interface HandlerData {
   id?: number;
@@ -164,6 +165,10 @@ export default function ProfilePage() {
           </div>
         </form>
       )}
+
+      <div className="mt-6">
+        <ChangePasswordCard />
+      </div>
     </div>
   );
 }

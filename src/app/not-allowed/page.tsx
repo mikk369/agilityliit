@@ -17,7 +17,7 @@ export default function NotAllowedPage() {
           {t.notAllowedText}
         </p>
         <Link
-          href="/calendar"
+          href="/competitions"
           className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
         >
           {t.notAllowedBack}

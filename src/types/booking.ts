@@ -44,23 +44,38 @@ export interface Booking {
   competitionTracks: CompetitionTrack[];
 }
 
-/** Booking list item (competitions page, calendar) */
+/** Booking list item (competitions page) */
 export type BookingListItem = Pick<
   Booking,
   "id" | "startDate" | "endDate" | "organizerName" | "clubName" | "location" | "competitionType" | "status" | "regStatus" | "regCloseDate"
 >;
 
-/** Calendar event shape */
+/**
+ * Calendar event shape — the payload the WordPress calendar on agilityliit.ee
+ * reads from `/api/public/calendar`. This app has no calendar page of its own,
+ * so this is an external contract: additive changes only, and never add
+ * personal fields (`email`, `phone`, `userId`).
+ */
 export interface CalendarEvent {
   id: number;
   clubName: string;
+  organizerName: string;
+  /** ISO date, from the booking's `startDate` */
   start: string;
+  /** ISO date, from the booking's `endDate` */
   end: string;
   referee: string[];
   competitionClasses: string;
   competitionType: string;
+  /** From the booking's `info` */
   description: string;
   location: string;
   regStatus: string | null;
+  regCloseDate: string | null;
+  /** Computed: whether the calendar should link this event to registration */
+  registrationOpen: boolean;
   status: string;
+  /** Absolute link into the app for a click on this event */
+  url: string;
 }
+

@@ -76,7 +76,9 @@ export async function POST(req: Request) {
         info: data.info || null,
         competitionClasses: data.competitionClasses || null,
         competitionType: data.competitionType,
-        status: data.status || "PENDING",
+        // Only an admin approves a date reservation or files a club event.
+        // An organizer's own booking always starts as PENDING.
+        status: session.user.role === "ADMIN" ? data.status || "PENDING" : "PENDING",
         regCloseDate: data.regCloseDate ? new Date(data.regCloseDate) : null,
       },
     });

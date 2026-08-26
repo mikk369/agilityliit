@@ -1,3 +1,6 @@
+/** The federation's WordPress site — the public front page this app sits under. */
+export const WP_SITE_URL = "https://agilityliit.ee";
+
 /**
  * Where a user belongs when they hit the app root.
  * The public landing page lives on agilityliit.ee — this app has no front page,
@@ -11,6 +14,6 @@ export function homePathForRole(role?: string | null): string {
     case "COMPETITOR":
       return "/competitor";
     default:
-      return "/calendar";
+      return "/competitions";
   }
 }

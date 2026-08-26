@@ -20,7 +20,6 @@ const et = {
 
   // Nav
   navLogo: "Agility Liit",
-  navCalendar: "Võistluskalender",
   navCompetitions: "Võistlused",
   navStatistics: "Statistika",
   navOrganizer: "Korraldaja",
@@ -39,6 +38,7 @@ const et = {
   loginSubmit: "Logi sisse",
   loginLoading: "Sisselogimine...",
   loginError: "Vale e-posti aadress või parool",
+  loginForgotPassword: "Unustasid parooli?",
   loginNoAccount: "Pole veel kontot?",
 
   // Register

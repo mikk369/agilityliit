@@ -1,5 +1,124 @@
 # Changelog
 
+## Password reset, admin users page, session revocation (2026-08-26)
+
+Steps 3–8 of `admin-page-plan.md`. The app had no way to reset a password since the move off WordPress — and `scripts/migrate-data.ts` gave every imported user the same temporary password, so this was the missing half of that migration.
+
+| Area | File | Change |
+|------|------|--------|
+| Mail | `src/lib/mail.ts` (new), `nodemailer` dependency | SMTP wrapper. Throws in production when unconfigured; logs the message in development so the flow works with no mail server |
+| Schema | `prisma/schema.prisma` | `PasswordResetToken` (sha256 hash only, 1 hour, single use) and `User.passwordChangedAt` |
+| Tokens | `src/lib/password-reset.ts` (new) | Issue and mail a link; consume a token and set the password. Callers never receive the token |
+| Limits | `src/lib/rate-limit.ts` (new) | In-process fixed-window limiter, keyed per address and per caller |
+| API | `src/app/api/auth/forgot-password/route.ts` (new) | Identical answer for known and unknown addresses — no account enumeration |
+| API | `src/app/api/auth/reset-password/route.ts` (new) | Consumes the token; unknown, expired and used all fail the same way |
+| API | `src/app/api/auth/change-password/route.ts` (new) | Signed-in change, current password required |
+| API | `src/app/api/admin/users/route.ts`, `[id]/role`, `[id]/password-reset` (new) | Users list, role change with guards, admin-triggered reset |
+| Pages | `src/app/forgot-password`, `src/app/reset-password` (new) | Public, added to the middleware allow-list; "Unustasid parooli?" now links from `/login` |
+| Pages | `src/app/admin/users/page.tsx`, `src/components/AdminTabs.tsx` (new) | Users screen and the admin tab bar |
+| Profile | `src/components/ChangePasswordCard.tsx` (new), `competitor/profile` | Change your own password without email |
+| Session | `src/lib/auth.ts`, `src/lib/api-auth.ts`, `src/middleware.ts`, `src/types/next-auth.d.ts` | The JWT is re-checked against the database on refresh |
+| Removed | `scripts/seed-organizer.js` | Replaced by `/admin/users`; it hardcoded a password |
+
+**An admin can start a reset but never finish one.** The link goes to the user's own address, the response carries no token, and no route lets anyone but the account holder choose a password.
+
+**Session revocation.** The role and the password live outside the token, so the `jwt` callback now re-reads them: a role change applies on the next session refresh, and a password change marks every token issued earlier as revoked — the middleware refuses it and `requireAuth()` returns 401. NextAuth v4 requires a token back from the callback, so revocation is a flag on the token rather than a null return. Changing your own password therefore signs you out, which the UI says plainly before redirecting to `/login`.
+
+Verified with `npx tsc --noEmit`, `npx eslint src` (still 32 pre-existing problems, none in the new files) and `npx next build`. Against a dev server: the reset pages return 200 while logged out, `/admin/users` and `/api/admin/users` 307 anonymous callers, `forgot-password` returns the same message for an unknown address, and password validation rejects a short or mismatched password.
+
+**Before deploying:** `npx prisma db push` (or a migration) for the new table and column, and set the `SMTP_*` variables. **Not verified:** every database path — MySQL is not running on this machine, so no reset link has actually been issued, mailed, or consumed end to end.
+
+---
+
+## Admin bookings page and role script (2026-08-26)
+
+Steps 1 and 2 of `admin-page-plan.md`: the wp-admin bookings table (`../reactAdminPage`) now exists in the app, and there is a way to create the first ADMIN. `/admin` was linked in the NavBar and guarded by the middleware but had no route at all — clicking "Admin" 404'd.
+
+| Area | File | Change |
+|------|------|--------|
+| CLI | `scripts/set-role.ts` (new) | `npx tsx scripts/set-role.ts <email> ADMIN`, plus `--list [ROLE]`. Refuses to demote the last ADMIN |
+| Route | `src/app/admin/page.tsx` (new) | `/admin` redirects to `/admin/bookings` |
+| Page | `src/app/admin/bookings/page.tsx` (new) | Bookings table: status filter, page size, approve, delete |
+| Page | `src/app/admin/bookings/BookingRow.tsx`, `types.ts` (new) | Row rendering and the filter/page-size constants |
+
+Approving (`PENDING -> BOOKED`) calls the existing ADMIN-only `PATCH /api/bookings/{id}/status`; deleting calls `DELETE /api/bookings/{id}`, which already refuses when competitors are registered. Editing links to the organizer's competition editor rather than duplicating an inline-edit form, and "Lisa võistlus või klubiüritus" reuses `/organizer/new`, where the status picker is admin-only since the approval guard landed. No new API surface.
+
+Password reset is deliberately **not** an admin power: an admin cannot see, set, or trigger a password change. Self-service reset is Part D of the plan and needs a mail transport the app does not have yet.
+
+Verified with `npx tsc --noEmit`, `npx next build`, and `npx eslint src` — still 32 problems, all pre-existing, none in the new files. The data-loading effect is written to avoid the `set-state-in-effect` error the rest of the codebase trips: `loadBookings()` returns rows and never sets state.
+
+**Not verified:** anything that talks to the database. MySQL is not running on this machine, so the table, the approve/delete actions, and `set-role.ts` past its argument parsing are untested against real data.
+
+---
+
+## Registration deadline and booking approval guards (2026-08-26)
+
+Groundwork from `calendar-handoff-plan.md` Part 6, pulled forward because the public calendar feed depends on it. Full admin-page plan now lives in `admin-page-plan.md`.
+
+| Area | File | Change |
+|------|------|--------|
+| Shared rule | `src/lib/registration.ts` (new) | `isRegistrationOpen()` — one implementation of open/closed, used by the public feed and the entry endpoint |
+| Feed | `src/app/api/public/calendar/route.ts` | Uses the shared helper instead of its own copy |
+| Entries | `src/app/api/competitors/route.ts` | Was checking only `regStatus === "reg_closed"`; now applies the full rule, so a competition past its `regCloseDate` stops accepting entries |
+| Approval | `src/app/api/bookings/route.ts` | A non-admin's new booking is always `PENDING` — the status field is no longer taken from the request body |
+| Approval | `src/app/api/bookings/[id]/route.ts` | `status` is only applied when the caller is an ADMIN; the owner keeps every other field |
+| UI | `src/app/organizer/new/page.tsx` | The status picker (Ootel / Kinnitatud / Klubiüritus) renders for admins only |
+
+**Why:** the hourly WordPress cron (`bookingRegStatusCron.php`) was the only thing that closed registration when a deadline passed, and it ran against the WordPress database — which the bookings left. Nothing had owned that transition since. Computing it on read closes the hole without a scheduler, but only if the entry endpoint applies the same rule; otherwise the calendar would show "closed" while the API kept accepting entries.
+
+Roles now match the WordPress split they always had: the organizer opens and closes registration, the admin approves `PENDING → BOOKED` and files club events, the competitor enters. Empty `regStatus` still counts as open, matching the old PHP check, so migrated rows with a NULL behave as before.
+
+Verified with `npx tsc --noEmit`, `npx eslint src` (no new problems) and `npx next build`. Not verified against real rows — MySQL is not running on this machine.
+
+---
+
+## Public calendar API for WordPress (2026-08-26)
+
+Part 2 of `calendar-handoff-plan.md`: the WordPress calendar on agilityliit.ee now has an endpoint it can actually read. Previously `/api/bookings/calendar` sat behind the auth middleware, so an anonymous cross-origin caller got `307 → /api/auth/signin` and no data at all.
+
+| Area | File | Change |
+|------|------|--------|
+| Endpoint | `src/app/api/public/calendar/route.ts` (new) | `GET /api/public/calendar`, optional `?year=`; returns the finished `CalendarEvent[]` shape so the WP bundle needs no mapping |
+| Endpoint | `src/app/api/bookings/calendar/route.ts` | Deleted — replaced by the above; it had no consumer left after the calendar page was removed, and WordPress still reads its own `wp-json` route until Part 4 |
+| CORS | `src/lib/cors.ts` (new) | Origin allow-list (`agilityliit.ee`, `www.agilityliit.ee`, override with `PUBLIC_ALLOWED_ORIGINS`) plus an `OPTIONS` preflight helper |
+| Middleware | `src/middleware.ts` | `/api/public` added to the public route list — one prefix for the whole external surface |
+| Types | `src/types/booking.ts` | `CalendarEvent` gains `organizerName`, `regCloseDate`, `registrationOpen`, `url`, and a comment marking it an external contract |
+| Docs | `README.md` | Documented the optional `PUBLIC_APP_URL` and `PUBLIC_ALLOWED_ORIGINS` env vars |
+
+`registrationOpen` is computed per request from `status`, `regStatus`, `regCloseDate` and `endDate`, so the retired WP `bookingRegStatusCron.php` has no successor to write and the two systems cannot disagree about the clock (decision D2 in the plan). `url` points at the public `/competitions/{id}` page rather than the protected registration form (decision D1) — it works for anonymous visitors and links onward to registration.
+
+Responses carry `Cache-Control: public, s-maxage=300, stale-while-revalidate=600`; error responses deliberately do not, since a cached 500 would blank the WP calendar for the whole TTL. The `select` is the privacy allow-list — `email`, `phone` and `userId` are not in it and must not be added.
+
+Verified with `npx tsc --noEmit`, `npx eslint src` (no new problems) and `npx next build`. Against a running dev server: the route no longer 307s, an allowed `Origin` is echoed back in `Access-Control-Allow-Origin` while an unknown one is not, `OPTIONS` returns 204 with `GET, OPTIONS`, `?year=abc` returns 400, and no error response carries the cache header.
+
+**Not verified:** the success path with real rows — MySQL is not running on this machine (`Can't reach database server at localhost:3306`), so every DB-backed route returns 500 locally. Worth a re-check against a live DB before the WP side is pointed at it.
+
+**Also done:** `npx prisma generate` — the generated client still resolved the query engine through the pre-rename path `agility project/agilityliit/...` and failed before it ever reached the database.
+
+---
+
+## Remove the calendar page from the app (2026-08-26)
+
+The competition calendar goes back to being a WordPress part of `agilityliit.ee` (the existing `booking_calendar` plugin). Inside the app it was also pointless: `/calendar` sat behind the auth middleware, so the anonymous visitors it was meant for could never reach it. Full handover plan in `calendar-handoff-plan.md` — this commit is Part 1 of it.
+
+| Area | File | Change |
+|------|------|--------|
+| Page | `src/app/calendar/page.tsx`, `src/app/calendar/calendar.css` | Deleted |
+| Nav | `src/components/NavBar.tsx` | Dropped the "Võistluskalender" desktop and mobile links |
+| Nav | `src/components/NavBar.tsx` | Logo when logged out → `WP_SITE_URL` (agilityliit.ee, the real front page); logout `callbackUrl` → `/competitions` |
+| Redirect | `src/lib/home-path.ts` | Fallback for a session with no known role `/calendar` → `/competitions`; added `WP_SITE_URL` |
+| 403 | `src/app/not-allowed/page.tsx` | "Back" button → `/competitions` |
+| Middleware | `src/middleware.ts` | Removed the `/calendar` public-route entry |
+| i18n | `src/i18n/translations/{et,en}.ts` | Removed `navCalendar` (`regClosedText` stays — the registration page uses it) |
+
+**Kept on purpose:** `src/app/api/bookings/calendar/route.ts` and the `CalendarEvent` type. They stop being internal and become the contract the WordPress calendar reads; both are commented as such.
+
+Verified with `npx tsc --noEmit`, `npx eslint src`, and `npx next build` — clean, no new lint problems, and the route table no longer lists `/calendar` (only the API endpoint remains).
+
+**Not changed:** that endpoint is still blocked by the middleware for anonymous callers (`307 → /api/auth/signin`), so WordPress cannot read it yet — that is Part 2 of the plan.
+
+---
+
 ## Remove app front page (2026-08-26)
 
 The app lives under `agilityliit.ee`, which is the real front page — its "Logi sisse" and "Registreeru" buttons link straight into this app's login and register pages. The marketing landing page at `/` (hero, "Vaata võistlusi"/"Registreeru" buttons, three feature cards) duplicated that entry point, so it is gone. `/` is now a session-only redirect and renders nothing.

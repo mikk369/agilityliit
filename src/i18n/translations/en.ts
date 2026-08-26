@@ -22,7 +22,6 @@ const en: Translations = {
 
   // Nav
   navLogo: "Agility Liit",
-  navCalendar: "Competition Calendar",
   navCompetitions: "Competitions",
   navStatistics: "Statistics",
   navOrganizer: "Organizer",
@@ -41,6 +40,7 @@ const en: Translations = {
   loginSubmit: "Log in",
   loginLoading: "Logging in...",
   loginError: "Invalid email or password",
+  loginForgotPassword: "Forgot your password?",
   loginNoAccount: "Don't have an account?",
 
   // Register

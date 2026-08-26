@@ -13,7 +13,9 @@ type AuthResult =
  */
 export async function requireAuth(): Promise<AuthResult> {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  // An empty id means the token was revoked — the password changed after it was
+  // issued, or the account is gone. See the jwt callback in lib/auth.ts.
+  if (!session || !session.user?.id) {
     return { response: NextResponse.json({ error: "Autentimata" }, { status: 401 }) };
   }
   return { session };

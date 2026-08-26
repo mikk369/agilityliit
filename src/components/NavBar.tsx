@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { useTranslation } from "@/i18n/LanguageContext";
 import LangToggle from "./LangToggle";
-import { homePathForRole } from "@/lib/home-path";
+import { homePathForRole, WP_SITE_URL } from "@/lib/home-path";
 
 export default function NavBar() {
   const { data: session } = useSession();
@@ -13,7 +13,7 @@ export default function NavBar() {
   const { t } = useTranslation();
 
   const role = session?.user?.role;
-  const homeHref = session ? homePathForRole(role) : "/calendar";
+  const homeHref = session ? homePathForRole(role) : WP_SITE_URL;
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -31,7 +31,6 @@ export default function NavBar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            <NavLink href="/calendar">{t.navCalendar}</NavLink>
             <NavLink href="/competitions">{t.navCompetitions}</NavLink>
             <NavLink href="/dog-statistics">{t.navStatistics}</NavLink>
 
@@ -59,7 +58,7 @@ export default function NavBar() {
                     {session.user.name}
                   </span>
                   <button
-                    onClick={() => signOut({ callbackUrl: "/calendar" })}
+                    onClick={() => signOut({ callbackUrl: "/competitions" })}
                     className="text-sm px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                   >
                     {t.navLogout}
@@ -120,9 +119,6 @@ export default function NavBar() {
         {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden pb-4 space-y-1">
-            <MobileLink href="/calendar" onClick={() => setMenuOpen(false)}>
-              {t.navCalendar}
-            </MobileLink>
             <MobileLink href="/competitions" onClick={() => setMenuOpen(false)}>
               {t.navCompetitions}
             </MobileLink>
@@ -157,7 +153,7 @@ export default function NavBar() {
                   <button
                     onClick={() => {
                       setMenuOpen(false);
-                      signOut({ callbackUrl: "/calendar" });
+                      signOut({ callbackUrl: "/competitions" });
                     }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
                   >

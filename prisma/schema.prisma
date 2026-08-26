@@ -13,18 +13,37 @@ datasource db {
 // =========================================================================
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(COMPETITOR)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  password          String
+  name              String
+  role              Role      @default(COMPETITOR)
+  /// Set on every password change; sessions issued earlier are rejected.
+  passwordChangedAt DateTime? @map("password_changed_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  handler  Handler?
-  bookings Booking[]
+  handler             Handler?
+  bookings            Booking[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
+}
+
+/// Single-use password reset tokens. Only the sha256 hash is stored, so a
+/// database dump cannot be used to reset anyone's password.
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 enum Role {

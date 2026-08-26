@@ -20,5 +20,9 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role: string;
+    /** When this token was issued, in ms — compared against `passwordChangedAt`. */
+    issuedAt: number;
+    /** Set when the account is gone or the password changed after `issuedAt`. */
+    revoked?: boolean;
   }
 }

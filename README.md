@@ -34,7 +34,31 @@ Create `.env`:
 DATABASE_URL="mysql://root:@localhost:3306/agliit"
 NEXTAUTH_SECRET="your-random-secret"
 NEXTAUTH_URL="http://localhost:3000"
+
+# Optional — public API read by the WordPress calendar on agilityliit.ee
+# PUBLIC_APP_URL="https://agliit.agilityliit.ee"          # base for links in /api/public/calendar and reset mails (defaults to NEXTAUTH_URL)
+# PUBLIC_ALLOWED_ORIGINS="https://agilityliit.ee"         # CORS allow-list (defaults to agilityliit.ee and www.agilityliit.ee)
+
+# Outgoing mail — required in production for password reset
+SMTP_HOST="smtp.example.ee"
+SMTP_PORT="587"
+SMTP_USER="no-reply@agilityliit.ee"
+SMTP_PASSWORD="..."
+SMTP_FROM="Eesti Agility Liit <no-reply@agilityliit.ee>"
 ```
+
+Without SMTP configured, development logs reset mails to the console instead of sending them; production refuses to send.
+
+### Roles
+
+Sign-up always creates a competitor. The first admin is made from the shell:
+
+```bash
+npx tsx scripts/set-role.ts --list ADMIN        # who is an admin now
+npx tsx scripts/set-role.ts you@example.ee ADMIN
+```
+
+After that, admins manage roles at `/admin/users`.
 
 Push database schema:
 

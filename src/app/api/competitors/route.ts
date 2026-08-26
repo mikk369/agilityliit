@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { competitorSchema } from "@/lib/validations";
+import { isRegistrationOpen } from "@/lib/registration";
 
 export async function POST(req: Request) {
   try {
@@ -39,7 +40,8 @@ export async function POST(req: Request) {
         { status: 404 }
       );
     }
-    if (booking.regStatus === "reg_closed") {
+    // Same rule the public calendar feed shows, so the two cannot disagree.
+    if (!isRegistrationOpen(booking)) {
       return NextResponse.json(
         { error: "Registreerimine on suletud" },
         { status: 400 }
