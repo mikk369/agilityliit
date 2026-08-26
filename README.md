@@ -51,14 +51,16 @@ Without SMTP configured, development logs reset mails to the console instead of 
 
 ### Roles
 
-Sign-up always creates a competitor. The first admin is made from the shell:
+Sign-up always creates a competitor — no request can ask for another role.
 
-```bash
-npx tsx scripts/set-role.ts --list ADMIN        # who is an admin now
-npx tsx scripts/set-role.ts you@example.ee ADMIN
+The first admin is promoted directly in the database: register the account through the app, then
+
+```sql
+UPDATE users SET role = 'ADMIN' WHERE email = 'you@example.ee';
+SELECT id, name, email, role FROM users WHERE role = 'ADMIN';
 ```
 
-After that, admins manage roles at `/admin/users`.
+The new role is picked up on the next session refresh; a reload is enough. From then on admins manage every role at `/admin/users`, and the database is only needed again if the last admin account is ever lost.
 
 Push database schema:
 

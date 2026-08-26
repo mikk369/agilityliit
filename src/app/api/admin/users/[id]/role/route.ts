@@ -9,7 +9,7 @@ import { prisma } from "@/lib/db";
  * Two guards, both enforced here rather than in the UI: an admin cannot change
  * their own role, and the last remaining admin cannot be demoted — an app with
  * no admins can only be repaired with database access
- * (`npx tsx scripts/set-role.ts <email> ADMIN`).
+ * (`UPDATE users SET role = 'ADMIN' WHERE email = ...`).
  */
 
 const schema = z.object({

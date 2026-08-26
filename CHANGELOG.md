@@ -1,5 +1,23 @@
 # Changelog
 
+## Drop the set-role script (2026-08-26)
+
+The first admin is promoted with a direct `UPDATE` on the `users` table instead of a CLI script. Same operation, same access required, one less thing to maintain — and it is a one-time step, since every later role change happens at `/admin/users`.
+
+| Area | File | Change |
+|------|------|--------|
+| CLI | `scripts/set-role.ts` | Deleted |
+| Docs | `README.md` | The roles section now shows the SQL |
+| Docs | `admin-page-plan.md` | Part C bootstrap is a database update, not a script |
+
+```sql
+UPDATE users SET role = 'ADMIN' WHERE email = 'you@example.ee';
+```
+
+The guards that mattered are on the endpoint, not the script: `/api/admin/users/{id}/role` still refuses to let an admin change their own role or demote the last remaining admin. Recovering from zero admins now means the same `UPDATE`.
+
+---
+
 ## Password reset, admin users page, session revocation (2026-08-26)
 
 Steps 3–8 of `admin-page-plan.md`. The app had no way to reset a password since the move off WordPress — and `scripts/migrate-data.ts` gave every imported user the same temporary password, so this was the missing half of that migration.
@@ -36,7 +54,7 @@ Steps 1 and 2 of `admin-page-plan.md`: the wp-admin bookings table (`../reactAdm
 
 | Area | File | Change |
 |------|------|--------|
-| CLI | `scripts/set-role.ts` (new) | `npx tsx scripts/set-role.ts <email> ADMIN`, plus `--list [ROLE]`. Refuses to demote the last ADMIN |
+| CLI | `scripts/set-role.ts` (new) | `npx tsx scripts/set-role.ts <email> ADMIN`, plus `--list [ROLE]`. Refuses to demote the last ADMIN. *(Removed again later the same day — see the entry above.)* |
 | Route | `src/app/admin/page.tsx` (new) | `/admin` redirects to `/admin/bookings` |
 | Page | `src/app/admin/bookings/page.tsx` (new) | Bookings table: status filter, page size, approve, delete |
 | Page | `src/app/admin/bookings/BookingRow.tsx`, `types.ts` (new) | Row rendering and the filter/page-size constants |
