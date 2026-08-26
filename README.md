@@ -62,7 +62,7 @@ SELECT id, name, email, role FROM users WHERE role = 'ADMIN';
 
 The new role is picked up on the next session refresh; a reload is enough. From then on admins manage every role at `/admin/users`, and the database is only needed again if the last admin account is ever lost.
 
-Push database schema:
+Create the database tables:
 
 ```bash
 npx prisma db push
@@ -75,6 +75,47 @@ npm run dev
 ```
 
 Open http://localhost:3000
+
+### The two Prisma commands
+
+They do different jobs and are easy to mix up:
+
+| Command | What it does | When |
+|---------|--------------|------|
+| `npx prisma generate` | Writes the TypeScript client into `src/generated/prisma`. **Never touches the database.** | After `npm install` and after every schema change. Per machine — `src/generated/` is gitignored, so the server needs its own |
+| `npx prisma db push` | Creates and alters the **tables** in `DATABASE_URL` to match the schema. Writes no code. | Once per database, and again after a schema change |
+
+`db push` runs `generate` for you at the end, so a schema change usually needs only the push.
+
+**Stop the dev server before running either.** Windows locks `query_engine-windows.dll.node` while the app is running, and generate fails with `EPERM: operation not permitted, rename ...`. The database change still went through — only the client copy failed, so re-run `npx prisma generate` with the server stopped.
+
+## Deploying to the server
+
+In this order, from the project directory:
+
+```bash
+# 1. stop the running app first (pm2 stop agliit, systemctl stop agliit, or Ctrl+C)
+git pull
+
+# 2. dependencies — only when package.json changed, but harmless to always run
+npm install
+
+# 3. regenerate the Prisma client (src/generated/ is not in git, so this is required)
+npx prisma generate
+
+# 4. apply schema changes to the database — only when prisma/schema.prisma changed
+npx prisma db push
+
+# 5. build and start
+npm run build
+npm start
+```
+
+Steps 3 and 4 are the ones people forget. Skipping **3** breaks the build or throws `@prisma/client did not initialize yet`; skipping **4** leaves the code expecting columns the database does not have — after a schema change that adds a column the app reads on every request, that breaks login, not just one page.
+
+For production, `npx prisma migrate deploy` with committed migration files is safer than `db push`: it is versioned, reviewable, and will not silently drop a column. `prisma.config.ts` already points at `prisma/migrations`. `db push` is fine while the app is not yet live.
+
+Server `.env` must also have `NEXTAUTH_URL` and `PUBLIC_APP_URL` set to the real domain, and the `SMTP_*` variables — without them password reset mail cannot be sent.
 
 ## Data Migration (from WordPress)
 
