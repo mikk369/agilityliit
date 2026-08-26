@@ -1,5 +1,26 @@
 # Changelog
 
+## Remove app front page (2026-08-26)
+
+The app lives under `agilityliit.ee`, which is the real front page — its "Logi sisse" and "Registreeru" buttons link straight into this app's login and register pages. The marketing landing page at `/` (hero, "Vaata võistlusi"/"Registreeru" buttons, three feature cards) duplicated that entry point, so it is gone. `/` is now a session-only redirect and renders nothing.
+
+| Area | File | Change |
+|------|------|--------|
+| Root route | `src/app/page.tsx` | Client landing page → server component that reads the session and redirects: no session → `/login`, `COMPETITOR` → `/competitor`, `ORGANIZER`/`ADMIN` → `/organizer` |
+| Role mapping | `src/lib/home-path.ts` (new) | `homePathForRole()` — single source for role → landing route |
+| Nav | `src/components/NavBar.tsx` | Logo links to the role's page when logged in, `/calendar` when not; logout `callbackUrl` `/` → `/calendar` |
+| 403 | `src/app/not-allowed/page.tsx` | "Back" button `/` → `/calendar` |
+| Middleware | `src/middleware.ts` | Added `/calendar` to the public route list |
+| i18n | `src/i18n/translations/{et,en}.ts` | Dropped the now-dead `home*` keys and their section comment |
+
+`/calendar` is the logged-out fallback rather than `/login` so that clicking the logo while browsing a public page (competitions, results, statistics) does not bounce a visitor into login. It was protected by middleware before, which would have broken it in that role — hence the public-route addition.
+
+Verified with `npx tsc --noEmit` and `npx next build` — clean; `/` now builds as a dynamic route, as expected for a session-dependent redirect.
+
+**Not changed:** login still does `router.push("/")` after sign-in and relies on the new redirect for the final hop, and the nav still shows "Logi sisse"/"Registreeru" for anonymous visitors.
+
+---
+
 ## Rename to agliit (2026-08-26)
 
 Renamed the app and its identifiers from `agilityliit`/`agiliit` to `agliit`, matching the new domain. The federation's WordPress site keeps its own domain `agilityliit.ee` — the app moves to the `agliit.agilityliit.ee` subdomain under it.

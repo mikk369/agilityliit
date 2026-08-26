@@ -42,6 +42,7 @@ export default withAuth(
           pathname === "/" ||
           pathname.startsWith("/login") ||
           pathname.startsWith("/register") ||
+          pathname.startsWith("/calendar") ||
           pathname.startsWith("/competitions") ||
           pathname.startsWith("/results") ||
           pathname.startsWith("/start-protocol") ||

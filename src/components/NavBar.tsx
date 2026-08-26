@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { useTranslation } from "@/i18n/LanguageContext";
 import LangToggle from "./LangToggle";
+import { homePathForRole } from "@/lib/home-path";
 
 export default function NavBar() {
   const { data: session } = useSession();
@@ -12,6 +13,7 @@ export default function NavBar() {
   const { t } = useTranslation();
 
   const role = session?.user?.role;
+  const homeHref = session ? homePathForRole(role) : "/calendar";
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -20,7 +22,7 @@ export default function NavBar() {
           {/* Logo */}
           <div className="flex items-center">
             <Link
-              href="/"
+              href={homeHref}
               className="text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
             >
               {t.navLogo}
@@ -57,7 +59,7 @@ export default function NavBar() {
                     {session.user.name}
                   </span>
                   <button
-                    onClick={() => signOut({ callbackUrl: "/" })}
+                    onClick={() => signOut({ callbackUrl: "/calendar" })}
                     className="text-sm px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                   >
                     {t.navLogout}
@@ -155,7 +157,7 @@ export default function NavBar() {
                   <button
                     onClick={() => {
                       setMenuOpen(false);
-                      signOut({ callbackUrl: "/" });
+                      signOut({ callbackUrl: "/calendar" });
                     }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
                   >

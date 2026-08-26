@@ -32,21 +32,6 @@ const en: Translations = {
   navRegister: "Register",
   navLogout: "Log out",
 
-  // Home page
-  homeTitle: "Estonian Agility Association",
-  homeSubtitle: "Agility competition registration and management system",
-  homeViewCompetitions: "View competitions",
-  homeRegister: "Register",
-  homeForCompetitor: "For Competitors",
-  homeForCompetitorDesc: "Register your dogs, participate in competitions and track results.",
-  homeStartHere: "Start here",
-  homeForOrganizer: "For Organizers",
-  homeForOrganizerDesc: "Create and manage competitions, compile start protocols and enter results.",
-  homeLogin: "Log in",
-  homeResults: "Results",
-  homeResultsDesc: "View competition results, dog statistics and rankings.",
-  homeViewResults: "View results",
-
   // Login
   loginTitle: "Log in",
   loginEmail: "Email",

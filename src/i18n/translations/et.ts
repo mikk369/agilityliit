@@ -30,21 +30,6 @@ const et = {
   navRegister: "Registreeru",
   navLogout: "Logi välja",
 
-  // Home page
-  homeTitle: "Eesti Agility Liit",
-  homeSubtitle: "Agility võistluste registreerimise ja haldamise süsteem",
-  homeViewCompetitions: "Vaata võistlusi",
-  homeRegister: "Registreeru",
-  homeForCompetitor: "Võistlejale",
-  homeForCompetitorDesc: "Registreeri oma koerad, osale võistlustel ja jälgi tulemusi.",
-  homeStartHere: "Alusta siin",
-  homeForOrganizer: "Korraldajale",
-  homeForOrganizerDesc: "Loo ja halda võistlusi, koosta stardiprotokolle ja sisesta tulemusi.",
-  homeLogin: "Logi sisse",
-  homeResults: "Tulemused",
-  homeResultsDesc: "Vaata võistluste tulemusi, koerte statistikat ja edetabeleid.",
-  homeViewResults: "Vaata tulemusi",
-
   // Login
   loginTitle: "Logi sisse",
   loginEmail: "E-post",
