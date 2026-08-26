@@ -103,7 +103,7 @@ export default function RegisterPage({
       });
 
       if (res.ok) {
-        router.push("/competitor/competitions");
+        router.push(`/competitor/registered/${bookingId}`);
       } else {
         const err = await res.json();
         setMessage({ type: "error", text: err.error || t.regFailed });

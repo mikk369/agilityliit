@@ -1,5 +1,50 @@
 # Changelog
 
+## Deployment docs, and retire REBUILD-PLAN.md (2026-08-26)
+
+Phase 8 was the last thing left in the rebuild plan, so the plan is now a record of finished work. What remains of deployment is documentation, not code: the app is on shared hosting (Zone), where the panel already proxies the subdomain to a local port and PM2 runs the app on it.
+
+| Area | File | Change |
+|------|------|--------|
+| Docs | `README.md` | Deployment rewritten around the real setup: the per-deploy sequence, where the port actually lives, and the first-deploy checklist |
+| Env | `.env.example` (new) | Every variable the app reads, with a note on what breaks without each |
+| Git | `.gitignore` | `!.env.example` — the existing `.env*` rule would otherwise have hidden it |
+| Docs | `integration-plan.md` | Infrastructure section rewritten: what is already handled by the host, and the four steps left for the cutover |
+| Docs | `REBUILD-PLAN.md` | **Deleted** |
+
+**Written and then deleted the same day:** an Nginx config, an Apache/cPanel config, and `ecosystem.config.js`. They configure a proxy and a process manager from scratch, which is a bare-VPS problem — on shared hosting the panel already does it and nothing would ever have read those files. Recorded here because the mistake is easy to repeat: check what the server actually runs before writing config for it.
+
+The port is the one detail that is not in the repo at all. It lives in the panel's proxy rule and in the PM2 start command (`pm2 start npm --name agliit -- start -- -p 3939`), and the two must match. `PORT` in `.env` does not work — `next start` resolves the port before it reads the env file. `NEXTAUTH_URL` and `PUBLIC_APP_URL` stay the public `https://` address either way, since those are what end up in login redirects, reset-mail links, and the calendar feed.
+
+`REBUILD-PLAN.md` described a schema, API and page inventory that `prisma/schema.prisma` and `src/app/` now document more accurately — it had drifted (it still specified jsPDF, which was never used). Everything unfinished in it moved to `integration-plan.md`, and it stays recoverable in git history. The one piece worth not losing — that the registration-close cron was dropped in favour of computing the deadline on read — is recorded in `src/lib/registration.ts`, in decision D2 of `calendar-handoff-plan.md`, and in this changelog.
+
+**Still needs a person, not a commit:** on the production server, `npx prisma db push` (login breaks without the new column) and the `SMTP_*` settings.
+
+---
+
+## Finish the rebuild plan: rich text, drag & drop, confirmation page (2026-08-26)
+
+The three features `REBUILD-PLAN.md` still listed as unbuilt, plus a phase that should never be built.
+
+| Area | File | Change |
+|------|------|--------|
+| Rich text | `src/components/ui/RichTextEditor.tsx` (new), `@tiptap/*` | Tiptap editor for competition descriptions: bold, italic, heading, lists, links |
+| Rich text | `src/app/organizer/competition/[id]/InfoTab.tsx` | The EST/ENG description textareas became rich text editors |
+| Rich text | `src/app/globals.css` | Styles for `.prose` — the markup already used those class names, but the Tailwind typography plugin is not installed, so lists and headings rendered unstyled |
+| Drag & drop | `src/app/organizer/competition/[id]/protocol/page.tsx` | Start protocol rows can be dragged into order; start numbers renumber to match. The up/down buttons and the inline number field still work |
+| Page | `src/app/competitor/registered/[id]/page.tsx` (new) | Post-registration confirmation, showing the dog and tracks entered |
+| Page | `src/app/competitor/register/[id]/page.tsx` | Lands on that page after registering, instead of the competitions list |
+| i18n | `src/i18n/translations/{et,en}.ts` | Five `registered*` keys |
+| Plan | `REBUILD-PLAN.md` | Phase 7 (cron) marked **DROPPED**; a status table added at the top |
+
+**Phase 7 was dropped, not implemented.** It called for a daily job flipping `reg_status` to `reg_closed`. The deadline is computed on read in `src/lib/registration.ts` instead, so there is no scheduler and no second clock to disagree with the app. Building the cron now would reintroduce the drift that removed.
+
+Descriptions were already rendered as HTML on the public competition page (`dangerouslySetInnerHTML`), so the editor changes what organizers can write, not how it displays. Note that the field is still trusted: an organizer posting to the API directly can put arbitrary HTML in it. Server-side sanitising is worth adding if that trust ever feels too broad.
+
+Verified with `npx tsc --noEmit`, `npx eslint src` and `npx next build`. **Not verified:** dragging a row and saving the reordered protocol against a live database, and the confirmation page with real entries — both need a working DB.
+
+---
+
 ## Drop the set-role script (2026-08-26)
 
 The first admin is promoted with a direct `UPDATE` on the `users` table instead of a CLI script. Same operation, same access required, one less thing to maintain — and it is a one-time step, since every later role change happens at `/admin/users`.

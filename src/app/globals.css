@@ -5,3 +5,49 @@
   --color-primary: #2563eb;
   --color-primary-hover: #1d4ed8;
 }
+
+/*
+ * Rich text (competition descriptions).
+ * The markup uses Tailwind's `prose` class names, but the typography plugin is
+ * not installed, so these are the styles that actually render lists, headings
+ * and links — both in the Tiptap editor and on the public competition page.
+ */
+.prose :where(p):not(:last-child) {
+  margin-bottom: 0.75rem;
+}
+
+.prose :where(h1, h2, h3) {
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.prose :where(ul, ol) {
+  margin: 0.5rem 0 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.prose :where(ul) {
+  list-style: disc;
+}
+
+.prose :where(ol) {
+  list-style: decimal;
+}
+
+.prose :where(li) {
+  margin: 0.125rem 0;
+}
+
+.prose :where(a) {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.prose :where(strong) {
+  font-weight: 600;
+}
+
+.prose :where(em) {
+  font-style: italic;
+}

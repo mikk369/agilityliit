@@ -43,6 +43,8 @@ export default function ProtocolPage({ params }: { params: Promise<{ id: string 
   const [published, setPublished] = useState(false);
   const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
   const [editingStartNumber, setEditingStartNumber] = useState<{ index: number; value: string } | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -209,6 +211,32 @@ export default function ProtocolPage({ params }: { params: Promise<{ id: string 
     // Update the main entries array
     const otherEntries = protocolEntries.filter((e) => e.competitionTrackId !== selectedTrackId);
     setProtocolEntries([...otherEntries, ...trackEntries]);
+  }
+
+  // Move an entry to another position, dragged or otherwise.
+  // Start numbers stay 1..n in table order — they belong to the slot, not the
+  // competitor, so a dragged row takes the number of the slot it lands in.
+  function reorderEntry(from: number, to: number) {
+    if (from === to) return;
+
+    const trackEntries = [...currentEntries];
+    const [moved] = trackEntries.splice(from, 1);
+    trackEntries.splice(to, 0, moved);
+
+    const renumbered = trackEntries.map((entry, idx) => ({
+      ...entry,
+      sortOrder: idx + 1,
+      startNumber: idx + 1,
+    }));
+
+    const otherEntries = protocolEntries.filter((e) => e.competitionTrackId !== selectedTrackId);
+    setProtocolEntries([...otherEntries, ...renumbered]);
+  }
+
+  function handleDrop(targetIndex: number) {
+    if (dragIndex !== null) reorderEntry(dragIndex, targetIndex);
+    setDragIndex(null);
+    setDropIndex(null);
   }
 
   // Edit start number inline
@@ -428,7 +456,31 @@ export default function ProtocolPage({ params }: { params: Promise<{ id: string 
                         {currentEntries.map((entry, idx) => {
                           const comp = getCompetitorForEntry(entry);
                           return (
-                            <tr key={`${entry.competitorId}-${entry.competitionTrackId}`} className="border-b border-gray-50 hover:bg-gray-50">
+                            <tr
+                              key={`${entry.competitorId}-${entry.competitionTrackId}`}
+                              draggable
+                              onDragStart={() => setDragIndex(idx)}
+                              onDragEnd={() => {
+                                setDragIndex(null);
+                                setDropIndex(null);
+                              }}
+                              onDragOver={(e) => {
+                                // Without this the drop event never fires.
+                                e.preventDefault();
+                                if (dropIndex !== idx) setDropIndex(idx);
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                handleDrop(idx);
+                              }}
+                              className={`border-b border-gray-50 hover:bg-gray-50 cursor-grab ${
+                                dragIndex === idx ? "opacity-40" : ""
+                              } ${
+                                dropIndex === idx && dragIndex !== null && dragIndex !== idx
+                                  ? "border-t-2 border-t-blue-500"
+                                  : ""
+                              }`}
+                            >
                               <td className="px-4 py-3">
                                 {editingStartNumber?.index === idx ? (
                                   <input

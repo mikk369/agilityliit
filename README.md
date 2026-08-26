@@ -91,31 +91,77 @@ They do different jobs and are easy to mix up:
 
 ## Deploying to the server
 
-In this order, from the project directory:
+The subdomain is proxied by the hosting panel to a local port (e.g. `3939`), and
+the app runs under PM2 on that port. Apache/cPanel handles the certificate; the
+app itself only ever speaks plain HTTP to `127.0.0.1`.
+
+### Every deploy
 
 ```bash
-# 1. stop the running app first (pm2 stop agliit, systemctl stop agliit, or Ctrl+C)
 git pull
-
-# 2. dependencies — only when package.json changed, but harmless to always run
-npm install
-
-# 3. regenerate the Prisma client (src/generated/ is not in git, so this is required)
-npx prisma generate
-
-# 4. apply schema changes to the database — only when prisma/schema.prisma changed
-npx prisma db push
-
-# 5. build and start
+npm ci                  # only when package-lock.json changed
+npx prisma generate     # required — src/generated/ is not in git
+npx prisma db push      # only when prisma/schema.prisma changed
 npm run build
-npm start
+pm2 restart agliit
 ```
 
-Steps 3 and 4 are the ones people forget. Skipping **3** breaks the build or throws `@prisma/client did not initialize yet`; skipping **4** leaves the code expecting columns the database does not have — after a schema change that adds a column the app reads on every request, that breaks login, not just one page.
+`prisma generate` is the step people skip: the generated client is gitignored,
+so a fresh `git pull` never brings it. Without it the build fails or the app
+throws `@prisma/client did not initialize yet`.
 
-For production, `npx prisma migrate deploy` with committed migration files is safer than `db push`: it is versioned, reviewable, and will not silently drop a column. `prisma.config.ts` already points at `prisma/migrations`. `db push` is fine while the app is not yet live.
+Stop the app before running prisma commands if the platform locks the query
+engine file (Windows does; Linux does not).
 
-Server `.env` must also have `NEXTAUTH_URL` and `PUBLIC_APP_URL` set to the real domain, and the `SMTP_*` variables — without them password reset mail cannot be sent.
+### The port
+
+The port lives in two places, and they must match: the proxy rule in the hosting
+panel, and the PM2 start command. There is no port setting in the repo.
+
+```bash
+# start the app on the proxied port
+pm2 start npm --name agliit -- start -- -p 3939
+pm2 save                     # remember it across reboots
+
+# check what it is running with
+pm2 describe agliit
+
+# change the port later (also update the panel's proxy rule)
+pm2 delete agliit
+pm2 start npm --name agliit -- start -- -p 4000
+pm2 save
+```
+
+`PORT=3939` in `.env` does **not** work: `next start` resolves the port before it
+loads the env file. Use the `-p` flag, or PM2's own env.
+
+Whatever the number, `.env` must still use the **public** URL, not the port —
+`NEXTAUTH_URL` and `PUBLIC_APP_URL` are what end up in login redirects, in the
+calendar feed's links, and in password reset mails:
+
+```env
+NEXTAUTH_URL="https://agliit.agilityliit.ee"
+PUBLIC_APP_URL="https://agliit.agilityliit.ee"
+```
+
+### Behind the proxy
+
+The password-reset rate limiter keys on the caller's address, read from
+`X-Forwarded-For` or `X-Real-IP`. Apache's `mod_proxy_http` sets
+`X-Forwarded-For` by default, so this normally works — but if reset requests
+ever start being throttled for everyone at once, that header is the thing to
+check, because every visitor would be arriving as `127.0.0.1`.
+
+### First deploy checklist
+
+1. `.env` from `.env.example` — real domain, a fresh `NEXTAUTH_SECRET`
+   (`openssl rand -base64 32`), and the `SMTP_*` block.
+2. `npx prisma db push` to create the tables.
+3. `npm run build`, then start under PM2 on the proxied port.
+4. `pm2 save` so it survives a reboot.
+5. Register an account, then promote it:
+   `UPDATE users SET role = 'ADMIN' WHERE email = '...';`
+6. Check `/admin/bookings`, and request a password reset to confirm mail sends.
 
 ## Data Migration (from WordPress)
 
