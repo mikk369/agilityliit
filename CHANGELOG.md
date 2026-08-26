@@ -1,5 +1,24 @@
 # Changelog
 
+## Split large page files (2026-08-26)
+
+Broke up the four largest page components listed in `refactoring-plan.md`. Components are co-located next to their route — in App Router only `page.tsx`/`route.ts` become routes, so sibling files are safe.
+
+| Page | Lines | Extracted |
+|------|-------|-----------|
+| `competitor/dogs/page.tsx` | 666 → 211 | `DogCard.tsx` (incl. `DetailItem`), `DogForm.tsx` |
+| `organizer/competition/[id]/page.tsx` | 687 → 289 | `InfoTab.tsx` (incl. `InfoRow`, `FormField`), `TrackForm.tsx`, `TrackTable.tsx`, `SettingsTab.tsx` |
+| `organizer/competition/[id]/competitors/page.tsx` | 349 → 206 | `CompetitorTable.tsx`, `ExportButton.tsx` |
+| `results/[id]/page.tsx` | 555 → 177 | `types.ts`, `TrackResultCard.tsx`, `resultsPdf.ts` |
+
+Beyond moving markup, tab-local state moved into the component that owns it: `TrackForm` owns the new-track form, `SettingsTab` owns the registration settings, `InfoTab` owns the edit/description state, and `TrackTable` absorbed the group-by-date logic. Pages now hold only fetch and mutation handlers. The seven subpage nav links in the competition editor collapsed into a `SUBPAGES` array.
+
+Verified with `npx tsc --noEmit`, `npx eslint src`, and `npx next build` — no new errors or warnings, all 33 routes unchanged.
+
+**Not changed:** the `set-state-in-effect` lint error in `DogCard.tsx` (moved verbatim — fixing it is a behavior change, not a move).
+
+---
+
 ## Reusable UI components (2026-08-25)
 
 Created shared UI components in `src/components/ui/` to replace duplicated patterns across pages.
