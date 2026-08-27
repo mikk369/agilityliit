@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
+import { recalculateDogOfficialSizes } from "@/lib/dog-measurements";
 
 export async function DELETE(
   _req: Request,
@@ -37,7 +38,10 @@ export async function DELETE(
       where: { id: measurementId },
     });
 
-    return NextResponse.json({ message: "Mõõtmine kustutatud" });
+    // Removing a measurement can un-confirm (or change) the decided class.
+    const official = await recalculateDogOfficialSizes(measurement.dogId);
+
+    return NextResponse.json({ message: "Mõõtmine kustutatud", ...official });
   } catch {
     return NextResponse.json({ error: "Serveri viga" }, { status: 500 });
   }

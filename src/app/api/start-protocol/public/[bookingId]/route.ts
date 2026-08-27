@@ -57,6 +57,8 @@ export async function GET(
                 nickName: true,
                 breed: true,
                 sizeEst: true,
+                sizeOfficial: true,
+                sizeOfficialFci: true,
                 sizeFci: true,
                 agilityClass: true,
                 jumpClass: true,

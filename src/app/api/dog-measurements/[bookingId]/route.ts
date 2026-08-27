@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { dogMeasurementSchema } from "@/lib/validations";
+import { classFromCm } from "@/lib/dog-sizes";
+import { recalculateDogOfficialSizes } from "@/lib/dog-measurements";
 
 export async function GET(
   _req: Request,
@@ -22,6 +24,8 @@ export async function GET(
             id: true,
             nickName: true,
             sizeEst: true,
+            sizeOfficial: true,
+            sizeOfficialFci: true,
             breed: true,
           },
         },
@@ -74,12 +78,25 @@ export async function POST(
 
     const data = parsed.data;
 
+    // Class follows from the measured height, per EKL / FCI thresholds.
+    const measurementClass = classFromCm(data.measurementCm, "EST");
+    const measurementFci = classFromCm(data.measurementCm, "FCI");
+
+    if (!measurementClass) {
+      return NextResponse.json(
+        { error: "Mõõtmistulemusest ei saa klassi tuletada" },
+        { status: 400 }
+      );
+    }
+
     const measurement = await prisma.dogMeasurement.create({
       data: {
         dogId: data.dogId,
         bookingId: id,
         referee: data.referee,
-        measurement: data.measurement,
+        measurementEst: measurementClass,
+        measurementCm: data.measurementCm,
+        measurementFci,
       },
       include: {
         dog: {
@@ -87,13 +104,18 @@ export async function POST(
             id: true,
             nickName: true,
             sizeEst: true,
+            sizeOfficial: true,
+            sizeOfficialFci: true,
             breed: true,
           },
         },
       },
     });
 
-    return NextResponse.json(measurement, { status: 201 });
+    // Two agreeing measurements decide the class; a single differing one does not.
+    const official = await recalculateDogOfficialSizes(data.dogId);
+
+    return NextResponse.json({ ...measurement, ...official }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Serveri viga" }, { status: 500 });
   }

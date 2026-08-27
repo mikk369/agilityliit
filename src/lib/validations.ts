@@ -243,8 +243,12 @@ export type AwardingInput = z.infer<typeof awardingSchema>;
 export const dogMeasurementSchema = z.object({
   dogId: z.number().int().positive(),
   bookingId: z.number().int().positive(),
-  referee: z.string().default(""),
-  measurement: z.string().default(""),
+  referee: z.string().min(1, "Kohtunik on kohustuslik"),
+  // The class is derived from the measured height server-side, never sent by the client.
+  measurementCm: z.coerce
+    .number()
+    .min(10, "Mõõtmistulemus peab olema vahemikus 10-100 cm")
+    .max(100, "Mõõtmistulemus peab olema vahemikus 10-100 cm"),
 });
 
 export type DogMeasurementInput = z.infer<typeof dogMeasurementSchema>;

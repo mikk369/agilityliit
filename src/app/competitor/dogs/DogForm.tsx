@@ -2,7 +2,7 @@
 
 import type { Translations } from "@/i18n/translations/et";
 import { SIZES, AGILITY_CLASSES, JUMP_CLASSES } from "@/lib/constants";
-import type { Dog } from "@/types";
+import type { DogFormFields } from "@/types";
 
 export function DogForm({
   formData,
@@ -13,8 +13,8 @@ export function DogForm({
   isEdit,
   t,
 }: {
-  formData: Omit<Dog, "id">;
-  setFormData: (d: Omit<Dog, "id">) => void;
+  formData: DogFormFields;
+  setFormData: (d: DogFormFields) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   saving: boolean;

@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import type { DogSummary } from "@/types";
+import { classFromCm, MIN_MEASUREMENT_CM, MAX_MEASUREMENT_CM } from "@/lib/dog-sizes";
 
 interface MeasurementsCompetitor {
   id: number;
@@ -16,7 +17,12 @@ interface Measurement {
   dogId: number;
   bookingId: number;
   referee: string;
-  measurement: string;
+  /** Resolved EKL class label, derived from measurementCm by the API. */
+  measurementEst: string;
+  /** Measured height in cm. Null on legacy free-text rows. */
+  measurementCm: string | number | null;
+  /** Resolved FCI class label, derived from measurementCm by the API. */
+  measurementFci: string | null;
   createdAt: string;
   dog: DogSummary;
   handlerName?: string;
@@ -34,7 +40,11 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
   // Form state
   const [selectedDogId, setSelectedDogId] = useState<string>("");
   const [referee, setReferee] = useState("");
-  const [measurementValue, setMeasurementValue] = useState("");
+  const [measurementCm, setMeasurementCm] = useState("");
+
+  // Class is derived from the measured height and shown before saving.
+  const derivedEst = classFromCm(measurementCm, "EST");
+  const derivedFci = classFromCm(measurementCm, "FCI");
 
   useEffect(() => {
     fetchData();
@@ -63,7 +73,7 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
         setCompetitors(comps.filter((c) => c.status === "ACCEPTED"));
       }
     } catch {
-      setMessage({ type: "error", text: "Andmete laadimine eba\u00f5nnestus" });
+      setMessage({ type: "error", text: "Andmete laadimine ebaõnnestus" });
     } finally {
       setLoading(false);
     }
@@ -106,8 +116,12 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
       setMessage({ type: "error", text: "Sisesta kohtuniku nimi" });
       return;
     }
-    if (!measurementValue.trim()) {
-      setMessage({ type: "error", text: "Sisesta m\u00f5\u00f5tmise tulemus" });
+    const cm = parseFloat(measurementCm.replace(",", "."));
+    if (!Number.isFinite(cm) || cm < MIN_MEASUREMENT_CM || cm > MAX_MEASUREMENT_CM) {
+      setMessage({
+        type: "error",
+        text: `Sisesta mõõdetud kõrgus vahemikus ${MIN_MEASUREMENT_CM}-${MAX_MEASUREMENT_CM} cm`,
+      });
       return;
     }
 
@@ -122,19 +136,26 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
           dogId: parseInt(selectedDogId),
           bookingId: parseInt(id),
           referee: referee.trim(),
-          measurement: measurementValue.trim(),
+          measurementCm: cm,
         }),
       });
 
       if (res.ok) {
-        setMessage({ type: "success", text: "M\u00f5\u00f5tmine lisatud!" });
+        // Two agreeing measurements are what actually change the dog's class.
+        const created = await res.json();
+        setMessage({
+          type: "success",
+          text: created?.sizeOfficial
+            ? `Mõõtmine lisatud! Koera võistlusklass kinnitatud: ${created.sizeOfficial}`
+            : "Mõõtmine lisatud! Klassi kinnitamiseks on vaja kahte sama tulemust.",
+        });
         setSelectedDogId("");
-        setMeasurementValue("");
+        setMeasurementCm("");
         // Keep referee value for convenience (same referee usually does multiple)
         fetchData();
       } else {
         const err = await res.json();
-        setMessage({ type: "error", text: err.error || "Lisamine eba\u00f5nnestus" });
+        setMessage({ type: "error", text: err.error || "Lisamine ebaõnnestus" });
       }
     } catch {
       setMessage({ type: "error", text: "Serveri viga" });
@@ -144,7 +165,7 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
   }
 
   async function handleDelete(measurementId: number, dogName: string) {
-    if (!confirm(`Kas eemalda "${dogName}" m\u00f5\u00f5tmine?`)) return;
+    if (!confirm(`Kas eemalda "${dogName}" mõõtmine?`)) return;
 
     try {
       const res = await fetch(`/api/dog-measurements/single/${measurementId}`, {
@@ -152,11 +173,11 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
       });
 
       if (res.ok) {
-        setMessage({ type: "success", text: "M\u00f5\u00f5tmine eemaldatud" });
+        setMessage({ type: "success", text: "Mõõtmine eemaldatud" });
         fetchData();
       } else {
         const err = await res.json();
-        setMessage({ type: "error", text: err.error || "Eemaldamine eba\u00f5nnestus" });
+        setMessage({ type: "error", text: err.error || "Eemaldamine ebaõnnestus" });
       }
     } catch {
       setMessage({ type: "error", text: "Serveri viga" });
@@ -184,7 +205,7 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
             &larr; Tagasi
           </Link>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">M\u00f5\u00f5tmised</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Mõõtmised</h1>
         {bookingName && <p className="text-sm text-gray-600">{bookingName}</p>}
       </div>
 
@@ -202,7 +223,7 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
 
       {/* Add measurement form */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Lisa m\u00f5\u00f5tmine</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Lisa mõõtmine</h2>
         <form onSubmit={handleAdd}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Dog selector */}
@@ -238,18 +259,27 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
               />
             </div>
 
-            {/* Measurement result */}
+            {/* Measured height -> class */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tulemus <span className="text-red-500">*</span>
+                Kõrgus (cm) <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
-                value={measurementValue}
-                onChange={(e) => setMeasurementValue(e.target.value)}
-                placeholder="nt. 38cm, L, S"
+                type="number"
+                step="0.1"
+                min={MIN_MEASUREMENT_CM}
+                max={MAX_MEASUREMENT_CM}
+                value={measurementCm}
+                onChange={(e) => setMeasurementCm(e.target.value)}
+                placeholder="nt. 38.5"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+              {derivedEst && (
+                <p className="mt-1 text-xs text-gray-600">
+                  EKL: <span className="font-medium">{derivedEst}</span>, FCI:{" "}
+                  <span className="font-medium">{derivedFci}</span>
+                </p>
+              )}
             </div>
 
             {/* Add button */}
@@ -263,6 +293,10 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
               </button>
             </div>
           </div>
+          <p className="text-xs text-gray-500">
+            Koera võistlusklassi muudab alles kaks sama klassi mõõtmistulemust. Kui teine
+            mõõtmine annab esimesest erineva klassi, klass ei muutu.
+          </p>
         </form>
       </div>
 
@@ -270,14 +304,14 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
       {measurements.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
           <p className="text-gray-500">
-            M\u00f5\u00f5tmisi pole veel lisatud.
+            Mõõtmisi pole veel lisatud.
           </p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">
-              M\u00f5\u00f5tmised ({measurements.length})
+              Mõõtmised ({measurements.length})
             </h2>
           </div>
           <div className="overflow-x-auto">
@@ -289,6 +323,7 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
                   <th className="px-4 py-3 font-medium text-gray-600">Koerajuht</th>
                   <th className="px-4 py-3 font-medium text-gray-600">Kohtunik</th>
                   <th className="px-4 py-3 font-medium text-gray-600">Tulemus</th>
+                  <th className="px-4 py-3 font-medium text-gray-600">Kinnitatud klass</th>
                   <th className="px-4 py-3 font-medium text-gray-600">Tegevused</th>
                 </tr>
               </thead>
@@ -313,8 +348,23 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
                     <td className="px-4 py-3 text-gray-900">{m.referee}</td>
                     <td className="px-4 py-3">
                       <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                        {m.measurement}
+                        {m.measurementCm ? `${m.measurementCm} cm` : m.measurementEst || "-"}
                       </span>
+                      {m.measurementCm && (
+                        <div className="mt-1 text-xs text-gray-500">
+                          EKL {m.measurementEst}
+                          {m.measurementFci ? `, FCI ${m.measurementFci}` : ""}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {m.dog.sizeOfficial ? (
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                          {m.dog.sizeOfficial}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-500">kinnitamata</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <button

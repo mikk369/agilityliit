@@ -24,6 +24,8 @@ export async function GET(
             id: true,
             nickName: true,
             sizeEst: true,
+            sizeOfficial: true,
+            sizeOfficialFci: true,
             sizeFci: true,
             agilityClass: true,
             jumpClass: true,

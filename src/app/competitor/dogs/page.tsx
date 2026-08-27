@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
-import type { Dog } from "@/types";
+import type { Dog, DogFormFields } from "@/types";
 import { MessageBanner } from "@/components/ui/MessageBanner";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { DogCard } from "./DogCard";
 import { DogForm } from "./DogForm";
 
 
-const emptyDog: Omit<Dog, "id"> = {
+const emptyDog: DogFormFields = {
   nickName: "",
   officialName: "",
   breed: "",
@@ -34,7 +34,7 @@ export default function DogsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<Omit<Dog, "id">>(emptyDog);
+  const [formData, setFormData] = useState<DogFormFields>(emptyDog);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [hasHandler, setHasHandler] = useState(true);

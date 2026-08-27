@@ -1,5 +1,34 @@
 # Changelog
 
+## Mõõtmised otsustavad koera võistlusklassi (2026-08-27)
+
+Mõõtmistulemus sisestatakse nüüd sentimeetrites ja klass tuletatakse EKL/FCI piiridest serveripoolselt. Koera võistlusklass muutub alles siis, kui **kaks** mõõtmist annavad **sama** klassi — teine, esimesest erinev mõõtmine klassi ei muuda.
+
+Piirid (ülempiir kaasa arvatud): EKL XS –28 | S 28,1–35 | M 35,1–43 | SL 43,1–50 | L 50,1– • FCI S –35 | M 35,1–43 | IM 43,1–48 | L 48,1–. FCI-l pole XS-i ja selle vaheklass (IM) salvestatakse olemasoleva `Väikemaksi(SL)` sildi alla, sest `size_est`/`size_fci` on viie eestikeelse sildiga enum'id.
+
+Vajab migratsiooni `../databases/migration_dog_measurement_classes.sql` (jagatud tabel, käivitada üks kord). Sama loogika on ka `../vite-event-calendar/includes/helpers.php`-s.
+
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | `Dog.sizeOfficial` / `sizeOfficialFci`; `DogMeasurement.measurementCm` (Decimal 5,2) / `measurementFci` |
+| `src/lib/dog-sizes.ts` | New — EKL/FCI piirid, `classFromCm()`, `confirmedClass()`, `effectiveDogSize()` |
+| `src/lib/dog-measurements.ts` | New — `recalculateDogOfficialSizes()`, arvutab kinnitatud klassi kogu ajaloost uuesti |
+| `src/lib/validations.ts` | `dogMeasurementSchema` võtab `measurementCm` (10–100) ja nõuab kohtunikku; `measurement` ei tule enam kliendilt |
+| `src/app/api/dog-measurements/[bookingId]/route.ts` | POST tuletab cm-ist mõlemad klassisildid ja arvutab kinnitatud klassi |
+| `src/app/api/dog-measurements/single/[id]/route.ts` | DELETE arvutab ümber — mõõtmise kustutamine võib klassi kinnituse tühistada |
+| `src/app/api/results/save/route.ts`, `results/track/[trackId]/route.ts` | Suuruse lahendamine eelistab kinnitatud klassi omaniku hinnangule |
+| `src/app/api/{start-protocol,results,competitors}/**` | Koera select'id tagastavad `sizeOfficial` / `sizeOfficialFci` |
+| `src/app/organizer/competition/[id]/measurements/page.tsx` | cm-sisend + tuletatud klassi eelvaade, „Kinnitatud klass" veerg, reegel vormi all; parandatud 19 katkist `\uXXXX` escape'i kuvatekstis |
+| `src/types/dog.ts` | `Dog` sai kinnitatud klassid; uus `DogFormFields` jätab need vormist välja |
+
+Kinnitatud klass hoitakse omaniku hinnangust eraldi: `sizeOfficial` kirjutab ainult mõõtmisloogika, `sizeEst` jääb võistleja enda sisestatuks. Lugejad eelistavad kinnitatud klassi ja langevad tagasi `sizeFci` / `sizeEst` peale, nii et enne kinnitust ei muutu miski. `sizeEst`-i otse ülekirjutamine oleks olnud vähem koodi, aga koeravorm kirjutab sinna — võistleja oleks saanud ametlikult mõõdetud klassi teadmatult üle kirjutada.
+
+Kontrollitud `npx tsc --noEmit` ja `npx next build`. PHP ja TS annavad piirijuhtudel (28/28,1 • 35/35,1 • 43/43,1 • 50/50,1 • 48/48,1) identse tulemuse. **Kontrollimata:** päris andmebaasi vastu — migratsioon on käivitamata, seega ühtki mõõtmist pole otsast lõpuni salvestatud. Vana vabateksti rida (`47-48`) säilib, aga klassi otsustada ei saa.
+
+**Märgatud, parandamata:** `src/app/organizer/competition/[id]/awardings/page.tsx` sisaldab sama escape-viga. `results/save` ja `results/track/[trackId]` ei arvesta suuruse lahendamisel raja `sizeStandard`-iga (PHP pool arvestab) — jäetud muutmata, viga on varasem.
+
+---
+
 ## Public competition pages, and the calendar hand-over that never landed (2026-08-27)
 
 A click in the WordPress calendar showed "registreerimine veel suletud" **and** opened the competition anyway, where the page said "Võistlust ei leitud". Two unrelated bugs wearing one costume.

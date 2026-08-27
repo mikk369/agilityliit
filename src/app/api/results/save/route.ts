@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       const competitor = await prisma.competitor.findUnique({
         where: { id: data.competitorId },
         include: {
-          dog: { select: { sizeEst: true, sizeFci: true } },
+          dog: { select: { sizeEst: true, sizeFci: true, sizeOfficial: true, sizeOfficialFci: true } },
         },
       });
 
@@ -70,7 +70,8 @@ export async function POST(req: Request) {
           competitorId: data.competitorId,
           competitionTrackId: data.competitionTrackId,
           competitionDate: track.competitionDate,
-          size: competitor.dog.sizeEst || competitor.dog.sizeFci || "",
+          // A class confirmed by two measurements wins over the owner's estimate.
+          size: competitor.dog.sizeOfficial || competitor.dog.sizeEst || competitor.dog.sizeFci || "",
           startNumber: 0,
           sortOrder: 0,
         },

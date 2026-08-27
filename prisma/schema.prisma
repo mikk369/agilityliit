@@ -67,7 +67,7 @@ model Handler {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  user        User          @relation(fields: [userId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
   dogs        Dog[]
   competitors Competitor[]
 
@@ -88,6 +88,9 @@ model Dog {
   birthday              DateTime?
   sizeEst               String?   @map("size_est")
   sizeFci               String?   @map("size_fci")
+  // Confirmed by two agreeing measurements; null until the class is decided.
+  sizeOfficial          String?   @map("size_official")
+  sizeOfficialFci       String?   @map("size_official_fci")
   agilityClass          String?   @map("agility_class")
   jumpClass             String?   @map("jump_class")
   registerCode          String?   @map("register_code")
@@ -398,12 +401,18 @@ model AwardingTrack {
 // =========================================================================
 
 model DogMeasurement {
-  id          Int      @id @default(autoincrement())
-  dogId       Int      @map("dog_id")
-  bookingId   Int      @map("booking_id")
-  referee     String   @default("")
-  measurement String   @default("")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id             Int      @id @default(autoincrement())
+  dogId          Int      @map("dog_id")
+  bookingId      Int      @map("booking_id")
+  referee        String   @default("")
+  /// Resolved EKL class label, derived from measurementCm.
+  /// Column stays `measurement` - the WordPress app reads the same table.
+  measurementEst String   @default("") @map("measurement")
+  /// Measured height in cm. Null on legacy free-text rows.
+  measurementCm  Decimal? @map("measurement_cm") @db.Decimal(5, 2)
+  /// Resolved FCI class label, derived from measurementCm.
+  measurementFci String?  @map("measurement_fci")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   dog     Dog     @relation(fields: [dogId], references: [id])
   booking Booking @relation(fields: [bookingId], references: [id])

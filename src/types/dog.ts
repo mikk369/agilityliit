@@ -11,6 +11,9 @@ export interface Dog {
   birthday: string | null;
   sizeEst: string | null;
   sizeFci: string | null;
+  /** Confirmed by two agreeing measurements; null until the class is decided. */
+  sizeOfficial: string | null;
+  sizeOfficialFci: string | null;
   agilityClass: string | null;
   jumpClass: string | null;
   registerCode: string | null;
@@ -21,8 +24,15 @@ export interface Dog {
   info: string | null;
 }
 
+/**
+ * Editable dog fields. Confirmed classes are set by the API from two agreeing
+ * measurements and are never edited through the dog form.
+ */
+export type DogFormFields = Omit<Dog, "id" | "sizeOfficial" | "sizeOfficialFci">;
+
 /** Minimal dog info used in tables/lists */
-export type DogSummary = Pick<Dog, "id" | "nickName" | "sizeEst" | "breed">;
+export type DogSummary = Pick<Dog, "id" | "nickName" | "sizeEst" | "breed"> &
+  Partial<Pick<Dog, "sizeOfficial" | "sizeOfficialFci">>;
 
 /** Dog info for registration */
 export type DogRegistration = Pick<
