@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth, requireRole } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
+import { isRegistrationOpen } from "@/lib/registration";
 
 export async function PATCH(
   req: Request,
@@ -74,7 +75,7 @@ export async function DELETE(
 
     const competitor = await prisma.competitor.findUnique({
       where: { id: competitorId },
-      include: { handler: { select: { userId: true } } },
+      include: { handler: { select: { userId: true } }, booking: true },
     });
     if (!competitor) {
       return NextResponse.json(
@@ -91,10 +92,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Keelatud" }, { status: 403 });
     }
 
-    // Own handler can only delete if status is PENDING
-    if (isOwner && !isPrivileged && competitor.status !== "PENDING") {
+    // A competitor may withdraw while registration is open, whether or not the
+    // organizer has accepted them; once it closes the entry is part of the
+    // start protocol and only the organizer can remove it.
+    if (isOwner && !isPrivileged && !isRegistrationOpen(competitor.booking)) {
       return NextResponse.json(
-        { error: "Kinnitatud registreeringut ei saa tühistada" },
+        { error: "Registreerimine on suletud" },
         { status: 400 }
       );
     }

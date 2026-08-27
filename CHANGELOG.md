@@ -1,5 +1,48 @@
 # Changelog
 
+## Editing your own entry: tracks and additional info (2026-08-27)
+
+Production's "Võistlused" table has two actions a competitor could not perform here at all: change which tracks you are entered for, and write your own note on the entry. Both are now on the my-competitions page, and both close when registration closes.
+
+Withdrawal changed rule with them. It used to be allowed only while the entry was `PENDING`, so an organizer accepting an entry locked the competitor in until they asked to be removed by hand. It now follows the same rule as everything else on the page — open until registration closes — which is what the PHP app does and what the footnote under the table promises.
+
+| File | Change |
+|------|--------|
+| `src/app/api/competitors/[id]/tracks/route.ts` | New — `PUT` replaces the owner's track selection; every track must belong to that competition |
+| `src/app/api/competitors/[id]/info/route.ts` | New — `PATCH` writes the owner's own `remarks` |
+| `src/app/api/competitors/[id]/route.ts` | `DELETE` gates the owner on registration being open instead of on `PENDING` status |
+| `src/app/competitor/competitions/TrackEditor.tsx` | New — modal listing the competition's tracks per day, current selection pre-checked |
+| `src/app/competitor/competitions/page.tsx` | "Muuda radu" / "Eemalda" actions, inline Lisainfo editing, the closed-registration footnote |
+| `src/lib/validations.ts` | `competitorTracksSchema` (at least one track), `competitorInfoSchema` |
+| `src/app/api/competitors/my-bookings/route.ts` | Track `id` is selected so the editor can pre-check the current entry |
+
+Both new routes are owner-only and reuse `isRegistrationOpen()` from `src/lib/registration.ts` — the same rule the entry endpoint and the public calendar feed already share, so a competitor cannot edit an entry the calendar shows as closed. Info editing is a separate route rather than an extra field on `PATCH /api/competitors/:id`: that route is organizer territory and carries `status` and the organizer's checkboxes, which an owner must not be able to write.
+
+The editor replaces the whole selection rather than sending a delta, matching the shape the registration flow posts, and it lists every track of the competition — it does not filter by the dog's size and class the way production's `isTrackEligible` does. The registration flow here does not filter either, so the two agree; filtering both is its own change.
+
+Verified with `npx tsc --noEmit` and `npx next build`. **Unverified:** against a real database — no entry has been edited end to end.
+
+**Noticed, not fixed:** the size standard (EST/FCI) chosen at registration is preserved per track row only if the client sends it; the editor sends none, so re-saving a selection resets `sizeStandard` to null on the rebuilt rows. Production sends a per-track map. Worth following up if the standard is ever used for entries made through this app.
+
+---
+
+## My competitions: club, judge, deadline and per-day tracks (2026-08-27)
+
+The competitor's own competition list showed less than production's "Võistlused" table: no club, no judge, no registration deadline, no additional info, and the track chips carried no date even though the API already returned one. All five were data the page had or could ask for.
+
+| File | Change |
+|------|--------|
+| `src/app/api/competitors/my-bookings/route.ts` | Selects `clubName`, `referee`, `regStatus`, `regCloseDate` |
+| `src/app/competitor/competitions/page.tsx` | Shows club, judges, the deadline (flagged red once closed), tracks grouped per competition day, and the entry's Lisainfo |
+| `src/types/competitor.ts` | `MyRegistration.booking` gained the four fields |
+| `src/i18n/translations/{et,en}.ts` | `myCompJudges`, `myCompRegCloses`, `myCompRegClosed`, `myCompAdditionalInfo` |
+
+The card's closed-registration check is deliberately a local helper, not `src/lib/registration.ts`: that one is the server's rule and needs `status` and `endDate`, which this endpoint does not return. The card only decides what to grey out — the API still decides what is allowed.
+
+Verified with `npx tsc --noEmit` and `npx next build`. **Unverified:** against a real database.
+
+---
+
 ## Measurement results on the dog card (2026-08-27)
 
 Commit [`5526a0d`](https://github.com/mikk369/agliit/commit/5526a0d)

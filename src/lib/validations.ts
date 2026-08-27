@@ -107,6 +107,15 @@ export const competitorSchema = z.object({
   sizeStandard: z.string().optional(),
 });
 
+export const competitorTracksSchema = z.object({
+  trackIds: z.array(z.number().int().positive()).min(1, "Vali vähemalt üks rada"),
+  sizeStandard: z.enum(["EST", "FCI"]).optional(),
+});
+
+export const competitorInfoSchema = z.object({
+  remarks: z.string().max(1000).optional(),
+});
+
 export type CompetitorInput = z.infer<typeof competitorSchema>;
 
 // =========================================================================

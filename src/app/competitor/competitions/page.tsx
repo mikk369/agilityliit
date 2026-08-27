@@ -5,13 +5,16 @@ import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { formatDate } from "@/lib/utils";
 import type { MyRegistration } from "@/types";
+import type { Translations } from "@/i18n/translations/et";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { TrackEditor } from "./TrackEditor";
 
 export default function MyCompetitionsPage() {
   const { t, locale } = useTranslation();
   const [registrations, setRegistrations] = useState<MyRegistration[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [editingTracksFor, setEditingTracksFor] = useState<MyRegistration | null>(null);
 
   useEffect(() => {
     fetchRegistrations();
@@ -47,6 +50,26 @@ export default function MyCompetitionsPage() {
     } catch {
       setMessage({ type: "error", text: t.serverError });
     }
+  }
+
+  async function handleSaveInfo(id: number, remarks: string) {
+    try {
+      const res = await fetch(`/api/competitors/${id}/info`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ remarks }),
+      });
+      if (res.ok) {
+        setMessage({ type: "success", text: t.myCompInfoSaved });
+        fetchRegistrations();
+        return true;
+      }
+      const err = await res.json();
+      setMessage({ type: "error", text: err.error || t.saveFailed });
+    } catch {
+      setMessage({ type: "error", text: t.serverError });
+    }
+    return false;
   }
 
   if (loading) return <LoadingSkeleton blocks={2} />;
@@ -101,13 +124,13 @@ export default function MyCompetitionsPage() {
                   key={r.id}
                   reg={r}
                   locale={locale}
-                  statusAccepted={t.myCompAccepted}
-                  statusPending={t.myCompPending}
-                  cancelLabel={t.cancel}
+                  t={t}
                   onCancel={() => handleCancel(r.id, r.dog.nickName)}
-                  canCancel={r.status === "PENDING"}
+                  onEditTracks={() => setEditingTracksFor(r)}
+                  onSaveInfo={(remarks) => handleSaveInfo(r.id, remarks)}
                 />
               ))}
+              <p className="text-xs text-gray-500">{t.myCompClosedNote}</p>
             </Section>
           )}
 
@@ -118,15 +141,30 @@ export default function MyCompetitionsPage() {
                   key={r.id}
                   reg={r}
                   locale={locale}
-                  statusAccepted={t.myCompAccepted}
-                  statusPending={t.myCompPending}
-                  cancelLabel={t.cancel}
-                  canCancel={false}
+                  t={t}
                 />
               ))}
             </Section>
           )}
         </>
+      )}
+
+      {editingTracksFor && (
+        <TrackEditor
+          reg={editingTracksFor}
+          locale={locale}
+          t={t}
+          onClose={() => setEditingTracksFor(null)}
+          onSaved={() => {
+            setEditingTracksFor(null);
+            setMessage({ type: "success", text: t.myCompTracksSaved });
+            fetchRegistrations();
+          }}
+          onError={(text) => {
+            setEditingTracksFor(null);
+            setMessage({ type: "error", text });
+          }}
+        />
       )}
     </div>
   );
@@ -141,23 +179,73 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+type TrackDay = {
+  date: string;
+  tracks: MyRegistration["competitorTracks"][number]["competitionTrack"][];
+};
+
+/** Tracks are listed per competition day, in the order the days run. */
+function groupTracksByDay(competitorTracks: MyRegistration["competitorTracks"]): TrackDay[] {
+  const days: TrackDay[] = [];
+  for (const { competitionTrack } of competitorTracks) {
+    const date = competitionTrack.competitionDate;
+    const existing = days.find((d) => d.date === date);
+    if (existing) {
+      existing.tracks.push(competitionTrack);
+    } else {
+      days.push({ date, tracks: [competitionTrack] });
+    }
+  }
+  return days.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Registration is closed once the organizer says so, or once the closing date
+ * has passed - the status flag is only refreshed by a scheduled job, so the
+ * date is checked even when the flag still says open.
+ */
+function isRegistrationOpen(booking: MyRegistration["booking"]): boolean {
+  if (booking.regStatus && booking.regStatus !== "reg_open") return false;
+  if (!booking.regCloseDate) return true;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(booking.regCloseDate) >= today;
+}
+
 function RegistrationCard({
   reg,
   locale,
-  statusAccepted,
-  statusPending,
-  cancelLabel,
+  t,
   onCancel,
-  canCancel,
+  onEditTracks,
+  onSaveInfo,
 }: {
   reg: MyRegistration;
   locale: string;
-  statusAccepted: string;
-  statusPending: string;
-  cancelLabel: string;
+  t: Translations;
   onCancel?: () => void;
-  canCancel: boolean;
+  onEditTracks?: () => void;
+  onSaveInfo?: (remarks: string) => Promise<boolean>;
 }) {
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [infoDraft, setInfoDraft] = useState(reg.remarks ?? "");
+  const [savingInfo, setSavingInfo] = useState(false);
+
+  const judges = reg.booking.referee ?? [];
+  const trackDays = groupTracksByDay(reg.competitorTracks);
+  // Everything a competitor may still change closes with registration.
+  const editable = isRegistrationOpen(reg.booking);
+  const registrationOpen = editable;
+
+  async function submitInfo() {
+    if (!onSaveInfo) return;
+    setSavingInfo(true);
+    const ok = await onSaveInfo(infoDraft);
+    setSavingInfo(false);
+    if (ok) setEditingInfo(false);
+  }
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">
       <div className="flex items-start justify-between gap-4">
@@ -168,11 +256,11 @@ function RegistrationCard({
             </h3>
             {reg.status === "ACCEPTED" ? (
               <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
-                {statusAccepted}
+                {t.myCompAccepted}
               </span>
             ) : (
               <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full">
-                {statusPending}
+                {t.myCompPending}
               </span>
             )}
           </div>
@@ -185,7 +273,22 @@ function RegistrationCard({
           </p>
           <p className="text-sm text-gray-600 mt-1">
             {reg.booking.competitionType}
+            {reg.booking.clubName && ` · ${reg.booking.clubName}`}
           </p>
+          {judges.length > 0 && (
+            <p className="text-sm text-gray-600 mt-1">
+              {t.myCompJudges}: {judges.join(", ")}
+            </p>
+          )}
+          {reg.booking.regCloseDate && (
+            <p className="text-sm text-gray-600 mt-1">
+              {t.myCompRegCloses}:{" "}
+              <span className={registrationOpen ? "" : "text-red-600"}>
+                {formatDate(reg.booking.regCloseDate, locale)}
+                {!registrationOpen && ` (${t.myCompRegClosed})`}
+              </span>
+            </p>
+          )}
           <div className="mt-2 flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {reg.dog.nickName}
@@ -196,27 +299,92 @@ function RegistrationCard({
               </span>
             )}
           </div>
-          {reg.competitorTracks.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {reg.competitorTracks.map((ct, i) => (
-                <span
-                  key={i}
-                  className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
-                >
-                  {ct.competitionTrack.letter} - {ct.competitionTrack.trackType}{" "}
-                  ({ct.competitionTrack.competitionType})
-                </span>
+          {trackDays.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {trackDays.map((day) => (
+                <div key={day.date} className="flex flex-wrap items-center gap-1">
+                  <span className="text-xs text-gray-500 mr-1">
+                    {formatDate(day.date, locale)}
+                  </span>
+                  {day.tracks.map((track, i) => (
+                    <span
+                      key={i}
+                      className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
+                    >
+                      {track.letter} - {track.trackType} ({track.competitionType})
+                    </span>
+                  ))}
+                </div>
               ))}
             </div>
           )}
+          <div className="mt-2">
+            {editingInfo ? (
+              <div className="space-y-2">
+                <textarea
+                  value={infoDraft}
+                  onChange={(e) => setInfoDraft(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  placeholder={t.myCompAdditionalInfo}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={submitInfo}
+                    disabled={savingInfo}
+                    className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    {t.save}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setInfoDraft(reg.remarks ?? "");
+                      setEditingInfo(false);
+                    }}
+                    disabled={savingInfo}
+                    className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              (reg.remarks || (editable && onSaveInfo)) && (
+                <p className="text-sm text-gray-600">
+                  <span className="text-gray-500">{t.myCompAdditionalInfo}: </span>
+                  {reg.remarks || "—"}
+                  {editable && onSaveInfo && (
+                    <button
+                      onClick={() => setEditingInfo(true)}
+                      className="ml-2 text-xs text-blue-600 hover:text-blue-700 underline"
+                    >
+                      {t.edit}
+                    </button>
+                  )}
+                </p>
+              )
+            )}
+          </div>
         </div>
-        {canCancel && onCancel && (
-          <button
-            onClick={onCancel}
-            className="shrink-0 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            {cancelLabel}
-          </button>
+        {editable && (onEditTracks || onCancel) && (
+          <div className="shrink-0 flex items-center gap-2">
+            {onEditTracks && (
+              <button
+                onClick={onEditTracks}
+                className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                {t.myCompEditTracks}
+              </button>
+            )}
+            {onCancel && (
+              <button
+                onClick={onCancel}
+                className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                {t.myCompWithdraw}
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>

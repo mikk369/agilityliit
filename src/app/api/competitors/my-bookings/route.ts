@@ -26,9 +26,13 @@ export async function GET() {
             startDate: true,
             endDate: true,
             organizerName: true,
+            clubName: true,
             location: true,
             competitionType: true,
             status: true,
+            referee: true,
+            regStatus: true,
+            regCloseDate: true,
           },
         },
         dog: {
@@ -44,6 +48,7 @@ export async function GET() {
           include: {
             competitionTrack: {
               select: {
+                id: true,
                 letter: true,
                 trackType: true,
                 size: true,

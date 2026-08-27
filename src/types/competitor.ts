@@ -80,9 +80,14 @@ export interface MyRegistration {
     startDate: string;
     endDate: string;
     organizerName: string;
+    clubName: string;
     location: string;
     competitionType: string;
     status: string;
+    /** Judges of the competition; stored as a JSON array. */
+    referee: string[] | null;
+    regStatus: string | null;
+    regCloseDate: string | null;
   };
   dog: {
     id: number;
@@ -93,6 +98,7 @@ export interface MyRegistration {
   };
   competitorTracks: {
     competitionTrack: {
+      id: number;
       letter: string;
       trackType: string;
       size: string;
