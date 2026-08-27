@@ -1,5 +1,23 @@
 # Changelog
 
+## Dog sizes are the Estonian class label, not a bare code (2026-08-27)
+
+`dogs.size_est` / `size_fci` hold `Väikemini(XS) | Mini(S) | Midi(M) | Väikemaksi(SL) | Maksi(L)` — the WordPress dog form writes exactly those, the measurement logic writes exactly those into `size_official`, and every size comparison expects them. This app's dog form offered the bare codes (`XS / S / M / SL / L`) instead, so a dog added here matched no track and no size grouping. The bare code belongs to `competition_tracks.size`, a different column with a different job.
+
+| File | Change |
+|------|--------|
+| `src/app/competitor/dogs/DogForm.tsx` | Size selects offer `DOG_SIZE_CLASSES`, the same five labels as organizerPage's AddDogInfo |
+| `src/lib/constants.ts` | `SIZES` is documented as the track size, not a dog size |
+| `../databases/migration_dog_size_labels.sql` | New — converts bare codes in `dogs.size_est` / `size_fci` to labels |
+
+`src/lib/track-eligibility.ts` is unchanged and still reads the label exactly the way production's `parseDogSizeCode` does — the mismatch was on the writing side, so it is fixed there rather than by teaching the reader a second format.
+
+FCI has no XS, so a dog stored as bare `XS` under FCI becomes `Mini(S)`, matching where FCI's smallest class starts. The migration prints the affected rows before touching them and prints anything left with an unrecognised size afterwards.
+
+Verified with `npx tsc --noEmit` and `npx next build`. A dog at `Midi(M)` / A2 / H2 is eligible for M-size A1, A2 and H1 tracks and rejected for H3 and for SL tracks. **Unverified:** against a real database — the migration has not been run.
+
+---
+
 ## Track class and officiality were stored in the wrong columns (2026-08-27)
 
 `competition_tracks` is a shared table, and the WordPress app fills it like this:

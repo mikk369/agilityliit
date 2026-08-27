@@ -1,7 +1,8 @@
 "use client";
 
 import type { Translations } from "@/i18n/translations/et";
-import { SIZES, AGILITY_CLASSES, JUMP_CLASSES } from "@/lib/constants";
+import { AGILITY_CLASSES, JUMP_CLASSES } from "@/lib/constants";
+import { DOG_SIZE_CLASSES } from "@/lib/dog-sizes";
 import type { DogFormFields } from "@/types";
 
 export function DogForm({
@@ -109,7 +110,7 @@ export function DogForm({
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">{t.dogsSelectSize}</option>
-            {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+            {DOG_SIZE_CLASSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div>
@@ -120,7 +121,7 @@ export function DogForm({
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">{t.dogsSelectSize}</option>
-            {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+            {DOG_SIZE_CLASSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div>

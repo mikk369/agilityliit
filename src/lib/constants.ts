@@ -1,7 +1,13 @@
 // =========================================================================
-// DOG SIZES
+// TRACK SIZES
 // =========================================================================
 
+/**
+ * The size a track is run for, stored in `competition_tracks.size`.
+ *
+ * A dog's own size is NOT one of these: dogs carry the Estonian class label
+ * ("Midi(M)"), see DOG_SIZE_CLASSES in `dog-sizes.ts`.
+ */
 export const SIZES = ["XS", "S", "M", "SL", "L"] as const;
 export type Size = (typeof SIZES)[number];
 
