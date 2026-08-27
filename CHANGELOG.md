@@ -2,6 +2,8 @@
 
 ## Measurement results on the dog card (2026-08-27)
 
+Commit [`5526a0d`](https://github.com/mikk369/agliit/commit/5526a0d)
+
 A competitor could see their dog's class progression but not what the dog had actually been measured at. Measurements lived only on the organizer page (`/organizer/competition/[id]/measurements`); the owner had no route to their own `dog_measurements` rows. The dog card now carries a "Mõõtmistulemused" block — measurements grouped per competition, plus the confirmed competition class — matching the organizerPage "Minu koerad" table (its "Mõõtmistulemused" / "Klassi vahetus" columns). Every other column of that table already existed here; "Klassi vahetus" is this app's "Klassi tõus" block.
 
 | File | Change |
@@ -19,57 +21,63 @@ Verified with `npx tsc --noEmit`. **Unverified:** against a real database — no
 
 ---
 
-## Koerajuhi vahetamine võistlejate tabelis (2026-08-27)
+## Changing the handler in the competitors table (2026-08-27)
 
-Võistlejate tabelis sai koerajuhti seni ainult vaadata. Nüüd saab kirje siduda teise olemasoleva koerajuhiga: „Muuda" avab otsitava valiku, mis kitseneb kirjutades. Kasulik vale koerajuhiga registreeringu parandamiseks ilma võistlejat kustutamata ja uuesti lisamata.
+Commit [`e62de1f`](https://github.com/mikk369/agliit/commit/e62de1f)
 
-Koerajuhi **nime ennast muuta ei saa** — `handlers` rida on inimese enda kirje, jagatud tema võistleja lehtedega. Valik muudab ainult `competitors.handlerId`; koerajuhtide ridu ei kirjutata. (organizerPage'is oli see päris viga — seal oli nimi vaba tekstiväli, mis nimetas inimese kõikjal ümber; vt `../organizerPage` v3.97 ja `../vite-event-calendar` v2.62. Selles rakenduses seda viga polnud, sest ühtki koerajuhi välja polnud võimalik muuta.)
+The competitors table showed the handler read-only. A row can now be re-pointed at a different existing handler: "Muuda" opens a searchable picker that narrows as you type. Useful for fixing a registration filed under the wrong handler without deleting and re-adding the competitor.
+
+The handler's **name itself cannot be edited** — a `handlers` row is that person's own record, shared with their competitor pages. The picker only changes `competitors.handlerId`; no handler row is written. (In organizerPage this was a real bug — the name was a free-text field that renamed the person everywhere; see `../organizerPage` v3.97 and `../vite-event-calendar` v2.62. This app never had the bug, because no handler field was editable at all.)
 
 | File | Change |
 |------|--------|
-| `src/components/ui/SearchableSelect.tsx` | New — kirjutades filtreeriv valik; tagastab valitud kirje `id`, mitte sisestatud teksti |
-| `src/app/organizer/competition/[id]/competitors/CompetitorTable.tsx` | „Koerajuht" lahtris „Muuda" nupp, mis avab valiku; uued `handlers` ja `onHandlerChange` propsid |
-| `src/app/organizer/competition/[id]/competitors/page.tsx` | Laeb koerajuhtide nimekirja (`GET /api/handlers`) ja saadab `PATCH /api/competitors/:id` päringu `handlerId`-ga |
-| `src/app/api/competitors/[id]/route.ts` | PATCH võtab valikulise `handlerId` — kontrollib olemasolu, uuendab `competitors.handlerId` |
+| `src/components/ui/SearchableSelect.tsx` | New — type-to-filter picker; returns the chosen record's `id`, not the typed text |
+| `src/app/organizer/competition/[id]/competitors/CompetitorTable.tsx` | "Muuda" button in the "Koerajuht" cell opens the picker; new `handlers` and `onHandlerChange` props |
+| `src/app/organizer/competition/[id]/competitors/page.tsx` | Loads the handler list (`GET /api/handlers`) and sends `PATCH /api/competitors/:id` with `handlerId` |
+| `src/app/api/competitors/[id]/route.ts` | PATCH takes an optional `handlerId` — checks it exists, updates `competitors.handlerId` |
 
-`SearchableSelect` tagastab teadlikult `id`, mitte teksti: nii ei saa komponenti kasutada olemasoleva kirje ümbernimetamiseks, ainult valimiseks. `GET /api/handlers` oli varem olemas, aga kasutuseta — see on selle esimene tarbija.
+`SearchableSelect` deliberately returns an `id` rather than text: that way the component cannot be used to rename an existing record, only to select one. `GET /api/handlers` already existed but had no callers — this is its first consumer.
 
-Kontrollitud `npx tsc --noEmit` ja `npx next build`. **Kontrollimata:** päris andmebaasi vastu.
+Verified with `npx tsc --noEmit` and `npx next build`. **Unverified:** against a real database.
 
-**Märgatud, parandamata:** `PATCH /api/competitors/:id` kontrollib ainult rolli (`ORGANIZER`/`ADMIN`), mitte seda, kas kasutaja omab just seda broneeringut — nii et üks korraldaja saab muuta teise võistlust. See kehtis juba `status`, `remarks`, `needsMeasurement` ja `needsCompetitionBook` väljade puhul; `handlerId` järgib sama mustrit. PHP pool kontrollib omanikku (`check_user_owns_booking()`).
+**Noticed, not fixed:** `PATCH /api/competitors/:id` checks only the role (`ORGANIZER`/`ADMIN`), not whether the user owns that particular booking — so one organizer can edit another's competition. This already applied to the `status`, `remarks`, `needsMeasurement` and `needsCompetitionBook` fields; `handlerId` follows the same pattern. The PHP side does check ownership (`check_user_owns_booking()`).
 
 ---
 
-## Mõõtmised otsustavad koera võistlusklassi (2026-08-27)
+## Measurements decide a dog's competition class (2026-08-27)
 
-Mõõtmistulemus sisestatakse nüüd sentimeetrites ja klass tuletatakse EKL/FCI piiridest serveripoolselt. Koera võistlusklass muutub alles siis, kui **kaks** mõõtmist annavad **sama** klassi — teine, esimesest erinev mõõtmine klassi ei muuda.
+Commit [`515b92b`](https://github.com/mikk369/agliit/commit/515b92b)
 
-Piirid (ülempiir kaasa arvatud): EKL XS –28 | S 28,1–35 | M 35,1–43 | SL 43,1–50 | L 50,1– • FCI S –35 | M 35,1–43 | IM 43,1–48 | L 48,1–. FCI-l pole XS-i ja selle vaheklass (IM) salvestatakse olemasoleva `Väikemaksi(SL)` sildi alla, sest `size_est`/`size_fci` on viie eestikeelse sildiga enum'id.
+A measurement is now entered in centimetres and the class is derived from the EKL/FCI boundaries server-side. A dog's competition class changes only once **two** measurements resolve to the **same** class — a second measurement landing in a different class than the first leaves the class untouched.
 
-Vajab migratsiooni `../databases/migration_dog_measurement_classes.sql` (jagatud tabel, käivitada üks kord). Sama loogika on ka `../vite-event-calendar/includes/helpers.php`-s.
+Boundaries (upper bound inclusive): EKL XS –28 | S 28.1–35 | M 35.1–43 | SL 43.1–50 | L 50.1– • FCI S –35 | M 35.1–43 | IM 43.1–48 | L 48.1–. FCI has no XS, and its intermediate class (IM) is stored under the existing `Väikemaksi(SL)` label, because `size_est`/`size_fci` are enums with five Estonian labels.
+
+Requires the migration `../databases/migration_dog_measurement_classes.sql` (shared table, run once). The same logic also lives in `../vite-event-calendar/includes/helpers.php`.
 
 | File | Change |
 |------|--------|
 | `prisma/schema.prisma` | `Dog.sizeOfficial` / `sizeOfficialFci`; `DogMeasurement.measurementCm` (Decimal 5,2) / `measurementFci` |
-| `src/lib/dog-sizes.ts` | New — EKL/FCI piirid, `classFromCm()`, `confirmedClass()`, `effectiveDogSize()` |
-| `src/lib/dog-measurements.ts` | New — `recalculateDogOfficialSizes()`, arvutab kinnitatud klassi kogu ajaloost uuesti |
-| `src/lib/validations.ts` | `dogMeasurementSchema` võtab `measurementCm` (10–100) ja nõuab kohtunikku; `measurement` ei tule enam kliendilt |
-| `src/app/api/dog-measurements/[bookingId]/route.ts` | POST tuletab cm-ist mõlemad klassisildid ja arvutab kinnitatud klassi |
-| `src/app/api/dog-measurements/single/[id]/route.ts` | DELETE arvutab ümber — mõõtmise kustutamine võib klassi kinnituse tühistada |
-| `src/app/api/results/save/route.ts`, `results/track/[trackId]/route.ts` | Suuruse lahendamine eelistab kinnitatud klassi omaniku hinnangule |
-| `src/app/api/{start-protocol,results,competitors}/**` | Koera select'id tagastavad `sizeOfficial` / `sizeOfficialFci` |
-| `src/app/organizer/competition/[id]/measurements/page.tsx` | cm-sisend + tuletatud klassi eelvaade, „Kinnitatud klass" veerg, reegel vormi all; parandatud 19 katkist `\uXXXX` escape'i kuvatekstis |
-| `src/types/dog.ts` | `Dog` sai kinnitatud klassid; uus `DogFormFields` jätab need vormist välja |
+| `src/lib/dog-sizes.ts` | New — EKL/FCI boundaries, `classFromCm()`, `confirmedClass()`, `effectiveDogSize()` |
+| `src/lib/dog-measurements.ts` | New — `recalculateDogOfficialSizes()`, rebuilds the confirmed class from the full history |
+| `src/lib/validations.ts` | `dogMeasurementSchema` takes `measurementCm` (10–100) and requires a referee; `measurement` no longer comes from the client |
+| `src/app/api/dog-measurements/[bookingId]/route.ts` | POST derives both class labels from cm and recomputes the confirmed class |
+| `src/app/api/dog-measurements/single/[id]/route.ts` | DELETE recomputes — removing a measurement can revoke a confirmed class |
+| `src/app/api/results/save/route.ts`, `results/track/[trackId]/route.ts` | Size resolution prefers the confirmed class over the owner's own estimate |
+| `src/app/api/{start-protocol,results,competitors}/**` | Dog selects return `sizeOfficial` / `sizeOfficialFci` |
+| `src/app/organizer/competition/[id]/measurements/page.tsx` | cm input with a derived-class preview, "Kinnitatud klass" column, the rule stated under the form; fixed 19 broken `\uXXXX` escapes in display text |
+| `src/types/dog.ts` | `Dog` gained the confirmed classes; the new `DogFormFields` keeps them out of the form |
 
-Kinnitatud klass hoitakse omaniku hinnangust eraldi: `sizeOfficial` kirjutab ainult mõõtmisloogika, `sizeEst` jääb võistleja enda sisestatuks. Lugejad eelistavad kinnitatud klassi ja langevad tagasi `sizeFci` / `sizeEst` peale, nii et enne kinnitust ei muutu miski. `sizeEst`-i otse ülekirjutamine oleks olnud vähem koodi, aga koeravorm kirjutab sinna — võistleja oleks saanud ametlikult mõõdetud klassi teadmatult üle kirjutada.
+The confirmed class is kept separate from the owner's estimate: only the measurement logic writes `sizeOfficial`, while `sizeEst` stays whatever the competitor entered. Readers prefer the confirmed class and fall back to `sizeFci` / `sizeEst`, so nothing changes before a class is confirmed. Overwriting `sizeEst` directly would have been less code, but the dog form writes there — a competitor could have unknowingly overwritten an officially measured class.
 
-Kontrollitud `npx tsc --noEmit` ja `npx next build`. PHP ja TS annavad piirijuhtudel (28/28,1 • 35/35,1 • 43/43,1 • 50/50,1 • 48/48,1) identse tulemuse. **Kontrollimata:** päris andmebaasi vastu — migratsioon on käivitamata, seega ühtki mõõtmist pole otsast lõpuni salvestatud. Vana vabateksti rida (`47-48`) säilib, aga klassi otsustada ei saa.
+Verified with `npx tsc --noEmit` and `npx next build`. PHP and TS give identical results at the boundary cases (28/28.1 • 35/35.1 • 43/43.1 • 50/50.1 • 48/48.1). **Unverified:** against a real database — the migration has not been run, so no measurement has been stored end to end. An old free-text row (`47-48`) survives but cannot decide a class.
 
-**Märgatud, parandamata:** `src/app/organizer/competition/[id]/awardings/page.tsx` sisaldab sama escape-viga. `results/save` ja `results/track/[trackId]` ei arvesta suuruse lahendamisel raja `sizeStandard`-iga (PHP pool arvestab) — jäetud muutmata, viga on varasem.
+**Noticed, not fixed:** `src/app/organizer/competition/[id]/awardings/page.tsx` contains the same escape bug. `results/save` and `results/track/[trackId]` ignore a track's `sizeStandard` when resolving size (the PHP side accounts for it) — left alone, the bug predates this change.
 
 ---
 
 ## Public competition pages, and the calendar hand-over that never landed (2026-08-27)
+
+Commit [`c83c5d9`](https://github.com/mikk369/agliit/commit/c83c5d9)
 
 A click in the WordPress calendar showed "registreerimine veel suletud" **and** opened the competition anyway, where the page said "Võistlust ei leitud". Two unrelated bugs wearing one costume.
 
@@ -103,6 +111,8 @@ Verified with `npx tsc --noEmit` and `npx next build`, and the calendar with `np
 ---
 
 ## Deployment docs, and retire REBUILD-PLAN.md (2026-08-26)
+
+Commit [`97ae920`](https://github.com/mikk369/agliit/commit/97ae920)
 
 Phase 8 was the last thing left in the rebuild plan, so the plan is now a record of finished work. What remains of deployment is documentation, not code: the app is on shared hosting (Zone), where the panel already proxies the subdomain to a local port and PM2 runs the app on it.
 
@@ -149,6 +159,8 @@ Verified with `npx tsc --noEmit`, `npx eslint src` and `npx next build`. **Not v
 
 ## Drop the set-role script (2026-08-26)
 
+Commit [`09f5b17`](https://github.com/mikk369/agliit/commit/09f5b17)
+
 The first admin is promoted with a direct `UPDATE` on the `users` table instead of a CLI script. Same operation, same access required, one less thing to maintain — and it is a one-time step, since every later role change happens at `/admin/users`.
 
 | Area | File | Change |
@@ -166,6 +178,8 @@ The guards that mattered are on the endpoint, not the script: `/api/admin/users/
 ---
 
 ## Password reset, admin users page, session revocation (2026-08-26)
+
+Commit [`339a0d8`](https://github.com/mikk369/agliit/commit/339a0d8)
 
 Steps 3–8 of `admin-page-plan.md`. The app had no way to reset a password since the move off WordPress — and `scripts/migrate-data.ts` gave every imported user the same temporary password, so this was the missing half of that migration.
 
@@ -286,6 +300,8 @@ Verified with `npx tsc --noEmit`, `npx eslint src`, and `npx next build` — cle
 
 ## Remove app front page (2026-08-26)
 
+Commit [`898929b`](https://github.com/mikk369/agliit/commit/898929b)
+
 The app lives under `agilityliit.ee`, which is the real front page — its "Logi sisse" and "Registreeru" buttons link straight into this app's login and register pages. The marketing landing page at `/` (hero, "Vaata võistlusi"/"Registreeru" buttons, three feature cards) duplicated that entry point, so it is gone. `/` is now a session-only redirect and renders nothing.
 
 | Area | File | Change |
@@ -307,6 +323,8 @@ Verified with `npx tsc --noEmit` and `npx next build` — clean; `/` now builds 
 
 ## Rename to agliit (2026-08-26)
 
+Commit [`64e00f1`](https://github.com/mikk369/agliit/commit/64e00f1)
+
 Renamed the app and its identifiers from `agilityliit`/`agiliit` to `agliit`, matching the new domain. The federation's WordPress site keeps its own domain `agilityliit.ee` — the app moves to the `agliit.agilityliit.ee` subdomain under it.
 
 | Area | File | Change |
@@ -325,6 +343,8 @@ Verified with `npx tsc --noEmit` and `npm run build` — clean, all routes uncha
 ---
 
 ## Split large page files (2026-08-26)
+
+Commit [`6818a53`](https://github.com/mikk369/agliit/commit/6818a53)
 
 Broke up the four largest page components listed in `refactoring-plan.md`. Components are co-located next to their route — in App Router only `page.tsx`/`route.ts` become routes, so sibling files are safe.
 
@@ -345,6 +365,8 @@ Verified with `npx tsc --noEmit`, `npx eslint src`, and `npx next build` — no 
 
 ## Reusable UI components (2026-08-25)
 
+Commit [`671f49d`](https://github.com/mikk369/agliit/commit/671f49d)
+
 Created shared UI components in `src/components/ui/` to replace duplicated patterns across pages.
 
 | Component | Replaces | Files updated |
@@ -359,6 +381,8 @@ Skipped: `ConfirmModal` (all pages use native `window.confirm()` — no benefit)
 
 ## Utility helpers (2026-08-25)
 
+Commit [`54365dd`](https://github.com/mikk369/agliit/commit/54365dd)
+
 Created `src/lib/utils.ts` with shared utility functions to replace duplicated logic across pages.
 
 | Helper | Replaces | Files updated |
@@ -369,6 +393,8 @@ Created `src/lib/utils.ts` with shared utility functions to replace duplicated l
 ---
 
 ## API auth helper (2026-08-25)
+
+Commit [`a8660a7`](https://github.com/mikk369/agliit/commit/a8660a7)
 
 Created `src/lib/api-auth.ts` with centralized auth helpers to replace repeated session/role check boilerplate across all API routes.
 
@@ -392,6 +418,8 @@ Created `src/lib/api-auth.ts` with centralized auth helpers to replace repeated 
 
 ## Shared type definitions (2025-08-25)
 
+Commit [`b4c1fc8`](https://github.com/mikk369/agliit/commit/b4c1fc8)
+
 Extracted duplicate inline interfaces into shared type files under `src/types/`. Pages now import from `@/types` instead of re-defining the same interfaces.
 
 | File | Types |
@@ -409,6 +437,8 @@ Updated pages: `competitor/dogs`, `competitor/results`, `competitor/competitions
 ---
 
 ## Centralized constants (2025-08-25)
+
+Commit [`a662d8f`](https://github.com/mikk369/agliit/commit/a662d8f)
 
 Extracted all hardcoded magic strings and repeated arrays into a single `src/lib/constants.ts` file. All constants are typed with `as const` for proper type inference.
 
