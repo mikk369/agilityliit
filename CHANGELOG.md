@@ -1,5 +1,36 @@
 # Changelog
 
+## Track class and officiality were stored in the wrong columns (2026-08-27)
+
+`competition_tracks` is a shared table, and the WordPress app fills it like this:
+
+```
+track_type       A1 | H2 | Open A | Seenior A | tunnelid ...   (the class)
+competition_type ametlik | mitteametlik                        (the officiality)
+```
+
+The organizer form in this app wrote them the other way round: `TRACK_TYPES = ["agility", "jumping"]` went into `track_type` and the class (`A0..A3`) into `competition_type`. `competitionTrackSchema` types both as a plain string, so nothing objected. The app then disagreed with itself about which column to read — `dog-progression` matches `"Seenior A"` and `startsWith("A")` against `trackType` (the database's convention), while the protocol filter and the competitors table rendered `competitionType` as the class (the form's convention).
+
+The database wins. The form now writes the class into `track_type` and the officiality into `competition_type`, from the same option list the WordPress app uses.
+
+| File | Change |
+|------|--------|
+| `src/lib/constants.ts` | `TRACK_TYPES` is the class list (mirrors organizerPage's `TRACK_TYPE_OPTIONS`); new `TRACK_OFFICIALITY`, `NON_OFFICIAL_TRACK_TYPES`, `TEAM_TRACK_TYPES`; `COMPETITION_CLASSES` is no longer the track form's source |
+| `src/app/organizer/competition/[id]/TrackForm.tsx` | "Tüüp" offers the classes, "Klass" became "Ametlikkus" (ametlik / mitteametlik); a class that cannot be official forces mitteametlik, and only team classes can be a relay |
+| `src/app/organizer/competition/[id]/protocol/page.tsx` | Track filter shows `letter - trackType` |
+| `src/app/organizer/competition/[id]/competitors/CompetitorTable.tsx` | Track chip shows `letter (trackType)` |
+| `../databases/migration_track_type_columns.sql` | New — swaps the two columns back on rows this app wrote |
+
+The forced-officiality and relay rules are ported from `handleTrackFieldChange` in organizerPage's `useTrackManagement`, so a track added here and a track added there end up identical.
+
+Requires the migration for any competition whose tracks were created in this app; rows written by the WordPress app were always correct and the `WHERE track_type IN ('agility', 'jumping')` clause skips them. The migration prints the affected rows before touching them and prints anything left with an unknown class afterwards. A "jumping" row that was given an agility class cannot be recovered automatically — it keeps that class and shows up in that final SELECT.
+
+This is what made track eligibility look broken: `isTrackEligible` reads the class from `trackType`, so a track created here matched no dog at all.
+
+Verified with `npx tsc --noEmit` and `npx next build`. **Unverified:** against a real database — the migration has not been run, and no track has been created through the corrected form end to end.
+
+---
+
 ## Only the tracks a dog may actually enter (2026-08-27)
 
 Registration listed every track of a competition, so a Midi A1 dog was offered Maxi tracks and A3 tracks and the entry was accepted. Production filters that list against the dog (`isTrackEligible` in organizerPage's CompetitorCompetitions), and now so does this app — in the registration flow and in the track editor, from one shared rule.

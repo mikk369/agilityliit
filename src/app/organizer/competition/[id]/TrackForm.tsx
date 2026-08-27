@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { SIZES, TRACK_TYPES, COMPETITION_CLASSES, TRACK_LETTERS } from "@/lib/constants";
+import {
+  SIZES,
+  TRACK_TYPES,
+  TRACK_OFFICIALITY,
+  NON_OFFICIAL_TRACK_TYPES,
+  TEAM_TRACK_TYPES,
+  TRACK_LETTERS,
+} from "@/lib/constants";
 
 export type TrackFormData = {
   competitionDate: string;
@@ -13,6 +20,22 @@ export type TrackFormData = {
   sizeStandard: string;
   isRelay: boolean;
 };
+
+/**
+ * Changing the class also settles the fields that depend on it: classes that
+ * cannot be official are forced to "mitteametlik", and only team classes can
+ * be a relay. Mirrors handleTrackFieldChange in organizerPage.
+ */
+function withTrackType(form: TrackFormData, trackType: string): TrackFormData {
+  return {
+    ...form,
+    trackType,
+    competitionType: NON_OFFICIAL_TRACK_TYPES.has(trackType)
+      ? "mitteametlik"
+      : form.competitionType,
+    isRelay: TEAM_TRACK_TYPES.has(trackType) ? form.isRelay : false,
+  };
+}
 
 export function TrackForm({
   defaultDate,
@@ -28,9 +51,9 @@ export function TrackForm({
   const [form, setForm] = useState<TrackFormData>({
     competitionDate: defaultDate,
     letter: "A",
-    trackType: "agility",
+    trackType: "A1",
     size: "S",
-    competitionType: "A1",
+    competitionType: "ametlik",
     referee: "",
     sizeStandard: "EST",
     isRelay: false,
@@ -70,7 +93,7 @@ export function TrackForm({
           <label className="block text-sm font-medium text-gray-700 mb-1">Tüüp *</label>
           <select
             value={form.trackType}
-            onChange={(e) => setForm({ ...form, trackType: e.target.value })}
+            onChange={(e) => setForm(withTrackType(form, e.target.value))}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {TRACK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -87,13 +110,14 @@ export function TrackForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Klass *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Ametlikkus *</label>
           <select
             value={form.competitionType}
             onChange={(e) => setForm({ ...form, competitionType: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={NON_OFFICIAL_TRACK_TYPES.has(form.trackType)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
           >
-            {COMPETITION_CLASSES.map((c) => <option key={c} value={c}>{c}</option>)}
+            {TRACK_OFFICIALITY.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
@@ -122,6 +146,7 @@ export function TrackForm({
               type="checkbox"
               checked={form.isRelay}
               onChange={(e) => setForm({ ...form, isRelay: e.target.checked })}
+              disabled={!TEAM_TRACK_TYPES.has(form.trackType)}
               className="text-blue-600 rounded"
             />
             Teaterada

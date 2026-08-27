@@ -397,7 +397,7 @@ export default function ProtocolPage({ params }: { params: Promise<{ id: string 
                           active={selectedTrackId === track.id}
                           onClick={() => setSelectedTrackId(track.id)}
                         >
-                          {track.letter} - {track.competitionType}
+                          {track.letter} - {track.trackType}
                           {track.size && ` (${track.size})`}
                           {entryCount > 0 && (
                             <span className="ml-1.5 bg-white/30 px-1.5 py-0.5 rounded text-xs">

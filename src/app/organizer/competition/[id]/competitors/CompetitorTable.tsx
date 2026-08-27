@@ -126,7 +126,7 @@ export function CompetitorTable({
                             key={i}
                             className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
                           >
-                            {ct.competitionTrack.letter} ({ct.competitionTrack.competitionType})
+                            {ct.competitionTrack.letter} ({ct.competitionTrack.trackType})
                           </span>
                         ))}
                       </div>

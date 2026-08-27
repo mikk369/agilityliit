@@ -24,8 +24,50 @@ export const JUMP_CLASSES = ["H0", "H1", "H2", "H3"] as const;
 // TRACK TYPES
 // =========================================================================
 
-export const TRACK_TYPES = ["agility", "jumping"] as const;
+/**
+ * A track's class, stored in `competition_tracks.track_type`.
+ *
+ * Shared table: the same values are written by the WordPress app, so this list
+ * mirrors TRACK_TYPE_OPTIONS in organizerPage/src/constants/trackTypes.ts.
+ * The neighbouring `competition_type` column holds the officiality
+ * (ametlik / mitteametlik), not the class.
+ */
+export const TRACK_TYPES = [
+  "H0",
+  "H1",
+  "A1",
+  "H2",
+  "A2",
+  "H3",
+  "A3",
+  "Open A",
+  "Open H",
+  "Seenior A",
+  "Seenior H",
+  "Open Team A",
+  "Open Team H",
+  "tunnelid",
+] as const;
 export type TrackType = (typeof TRACK_TYPES)[number];
+
+/** Track classes that can never be official — the organizer form forces these. */
+export const NON_OFFICIAL_TRACK_TYPES = new Set([
+  "A0",
+  "H0",
+  "tunnelid",
+  "Seenior A",
+  "Seenior H",
+]);
+
+/** Team classes; only these may be run as a relay. */
+export const TEAM_TRACK_TYPES = new Set(["Open Team A", "Open Team H"]);
+
+// =========================================================================
+// TRACK OFFICIALITY (`competition_tracks.competition_type`)
+// =========================================================================
+
+export const TRACK_OFFICIALITY = ["ametlik", "mitteametlik"] as const;
+export type TrackOfficiality = (typeof TRACK_OFFICIALITY)[number];
 
 // =========================================================================
 // TRACK LETTERS
