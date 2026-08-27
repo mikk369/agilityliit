@@ -131,6 +131,16 @@ const en: Translations = {
   dogsVaccExpired: (date: string) => `Expired (${date})`,
   dogsVaccExpiringSoon: (date: string) => `Expiring soon (${date})`,
 
+  // Dog measurements
+  measurementsTitle: "Measurement results",
+  measurementsNone: "No measurement results.",
+  measurementsLoadError: "Failed to load measurements.",
+  measurementLabel: (index: number) => `Measurement ${index}`,
+  measurementReferee: "Referee",
+  measurementOfficialClass: "Confirmed competition class",
+  measurementOfficialClassPending:
+    "not confirmed — two measurements in the same class are required",
+
   // Class progression
   progressionTitle: "Class progression",
   progressionHighest: (cls: string) => `highest class achieved (${cls})`,

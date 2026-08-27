@@ -129,6 +129,16 @@ const et = {
   dogsVaccExpired: (date: string) => `Aegunud (${date})`,
   dogsVaccExpiringSoon: (date: string) => `Aegub peagi (${date})`,
 
+  // Dog measurements
+  measurementsTitle: "Mõõtmistulemused",
+  measurementsNone: "Mõõtmistulemused puuduvad.",
+  measurementsLoadError: "Mõõtmiste laadimine ebaõnnestus.",
+  measurementLabel: (index: number) => `Mõõtmine ${index}`,
+  measurementReferee: "Kohtunik",
+  measurementOfficialClass: "Kinnitatud võistlusklass",
+  measurementOfficialClassPending:
+    "kinnitamata — vaja on kahte sama klassi mõõtmistulemust",
+
   // Class progression
   progressionTitle: "Klassi tõus",
   progressionHighest: (cls: string) => `kõrgeim klass saavutatud (${cls})`,

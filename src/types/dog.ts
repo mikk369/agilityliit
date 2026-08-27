@@ -65,3 +65,26 @@ export interface ProgressionData {
     faults: number;
   }>;
 }
+
+/** One recorded measurement of a dog, as shown in its measurement history. */
+export interface DogMeasurementEntry {
+  id: number;
+  referee: string;
+  /** Resolved EKL class label, derived from `measurementCm` by the API. */
+  measurementEst: string;
+  /** Measured height in cm. Null on legacy free-text rows. */
+  measurementCm: number | null;
+  /** Resolved FCI class label, derived from `measurementCm` by the API. */
+  measurementFci: string | null;
+  createdAt: string;
+  competitionId: number;
+  competitionName: string;
+  competitionStartDate: string;
+}
+
+/** Measurement history plus the classes those measurements confirmed. */
+export interface DogMeasurementHistory {
+  sizeOfficial: string | null;
+  sizeOfficialFci: string | null;
+  measurements: DogMeasurementEntry[];
+}

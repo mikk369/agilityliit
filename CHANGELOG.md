@@ -1,5 +1,24 @@
 # Changelog
 
+## Measurement results on the dog card (2026-08-27)
+
+A competitor could see their dog's class progression but not what the dog had actually been measured at. Measurements lived only on the organizer page (`/organizer/competition/[id]/measurements`); the owner had no route to their own `dog_measurements` rows. The dog card now carries a "Mõõtmistulemused" block — measurements grouped per competition, plus the confirmed competition class — matching the organizerPage "Minu koerad" table (its "Mõõtmistulemused" / "Klassi vahetus" columns). Every other column of that table already existed here; "Klassi vahetus" is this app's "Klassi tõus" block.
+
+| File | Change |
+|------|--------|
+| `src/app/api/dogs/[id]/measurements/route.ts` | New — GET returns the dog's measurement history and confirmed classes; owner or `ORGANIZER`/`ADMIN` |
+| `src/app/competitor/dogs/DogCard.tsx` | "Mõõtmistulemused" block, fetched when the card expands, grouped per competition |
+| `src/types/dog.ts` | `DogMeasurementEntry`, `DogMeasurementHistory` |
+| `src/i18n/translations/{et,en}.ts` | `measurements*` keys; the Estonian wording is taken from production |
+
+The grouping key is deliberately `bookingId` rather than production's `organizer_name (start_date)` string: two competitions run by the same club on the same day no longer collapse into one block, and renaming a competition no longer splits its history in two.
+
+Verified with `npx tsc --noEmit`. **Unverified:** against a real database — no measurement has been stored end to end yet (see "Mõõtmised otsustavad koera võistlusklassi").
+
+**Noticed, not fixed:** `react-hooks/set-state-in-effect` errors in `DogCard.tsx` on both the new effect and the pre-existing progression one — both call `setLoading(true)` in the effect body. The new one follows the existing pattern; the real fix is to move both loads out of effects.
+
+---
+
 ## Koerajuhi vahetamine võistlejate tabelis (2026-08-27)
 
 Võistlejate tabelis sai koerajuhti seni ainult vaadata. Nüüd saab kirje siduda teise olemasoleva koerajuhiga: „Muuda" avab otsitava valiku, mis kitseneb kirjutades. Kasulik vale koerajuhiga registreeringu parandamiseks ilma võistlejat kustutamata ja uuesti lisamata.

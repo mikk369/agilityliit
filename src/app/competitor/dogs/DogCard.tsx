@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { formatDate } from "@/lib/utils";
 import type { Translations } from "@/i18n/translations/et";
-import type { Dog, ProgressionData } from "@/types";
+import type { Dog, DogMeasurementEntry, DogMeasurementHistory, ProgressionData } from "@/types";
 
 export function DogCard({
   dog,
@@ -22,6 +22,10 @@ export function DogCard({
   const [progression, setProgression] = useState<ProgressionData | null>(null);
   const [progressionLoading, setProgressionLoading] = useState(false);
   const [progressionLoaded, setProgressionLoaded] = useState(false);
+  const [measurements, setMeasurements] = useState<DogMeasurementHistory | null>(null);
+  const [measurementsLoading, setMeasurementsLoading] = useState(false);
+  const [measurementsLoaded, setMeasurementsLoaded] = useState(false);
+  const [measurementsError, setMeasurementsError] = useState(false);
 
   useEffect(() => {
     if (expanded && !progressionLoaded) {
@@ -36,6 +40,22 @@ export function DogCard({
         .finally(() => setProgressionLoading(false));
     }
   }, [expanded, progressionLoaded, dog.id]);
+
+  useEffect(() => {
+    if (!expanded || measurementsLoaded) return;
+    setMeasurementsLoading(true);
+    fetch(`/api/dogs/${dog.id}/measurements`)
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data: DogMeasurementHistory) => {
+        setMeasurements(data);
+        setMeasurementsLoaded(true);
+      })
+      .catch(() => {
+        setMeasurementsError(true);
+        setMeasurementsLoaded(true);
+      })
+      .finally(() => setMeasurementsLoading(false));
+  }, [expanded, measurementsLoaded, dog.id]);
 
   function isExpired(date: string | null) {
     if (!date) return true;
@@ -123,6 +143,47 @@ export function DogCard({
               <p className="text-sm text-gray-700">{dog.info}</p>
             </div>
           )}
+
+          {/* Measurement results */}
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">{t.measurementsTitle}</h3>
+            {measurementsLoading ? (
+              <div className="animate-pulse h-6 bg-gray-200 rounded w-48" />
+            ) : measurementsError ? (
+              <p className="text-xs text-red-600">{t.measurementsLoadError}</p>
+            ) : (
+              <div className="space-y-2">
+                {measurements && measurements.measurements.length > 0 ? (
+                  groupMeasurementsByCompetition(measurements.measurements).map((group) => (
+                    <div key={group.competitionId}>
+                      <p className="text-xs font-medium text-gray-600">
+                        {group.competitionName}
+                        <span className="text-gray-400"> · {formatDate(group.competitionStartDate, locale)}</span>
+                      </p>
+                      {group.entries.map((m, i) => (
+                        <p key={m.id} className="text-xs text-gray-600">
+                          {t.measurementLabel(i + 1)}: {t.measurementReferee} {m.referee || "—"},{" "}
+                          {m.measurementCm !== null ? `${m.measurementCm} cm` : m.measurementEst || "—"}
+                          {m.measurementCm !== null && m.measurementEst ? ` — EKL ${m.measurementEst}` : ""}
+                          {m.measurementCm !== null && m.measurementFci ? `, FCI ${m.measurementFci}` : ""}
+                        </p>
+                      ))}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-400">{t.measurementsNone}</p>
+                )}
+                <p className="text-xs text-gray-600">
+                  <span className="font-medium">{t.measurementOfficialClass}: </span>
+                  {measurements?.sizeOfficial
+                    ? `${measurements.sizeOfficial}${
+                        measurements.sizeOfficialFci ? ` (FCI: ${measurements.sizeOfficialFci})` : ""
+                      }`
+                    : t.measurementOfficialClassPending}
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* Class Progression */}
           <div className="mt-3 pt-3 border-t border-gray-200">
@@ -238,6 +299,32 @@ export function DogCard({
       )}
     </div>
   );
+}
+
+type MeasurementGroup = {
+  competitionId: number;
+  competitionName: string;
+  competitionStartDate: string;
+  entries: DogMeasurementEntry[];
+};
+
+/** Measurements of one competition belong together, in the order they were taken. */
+function groupMeasurementsByCompetition(entries: DogMeasurementEntry[]): MeasurementGroup[] {
+  const groups: MeasurementGroup[] = [];
+  for (const entry of entries) {
+    const existing = groups.find((g) => g.competitionId === entry.competitionId);
+    if (existing) {
+      existing.entries.push(entry);
+    } else {
+      groups.push({
+        competitionId: entry.competitionId,
+        competitionName: entry.competitionName,
+        competitionStartDate: entry.competitionStartDate,
+        entries: [entry],
+      });
+    }
+  }
+  return groups;
 }
 
 function DetailItem({ label, value }: { label: string; value: string | null | undefined }) {
