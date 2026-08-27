@@ -158,6 +158,7 @@ const en: Translations = {
   myCompBrowse: "Browse competitions",
   myCompUpcoming: "Upcoming competitions",
   myCompPast: "Past competitions",
+  regNoEligibleTracks: "No track suits this dog — check its size and class.",
   myCompEditTracks: "Edit tracks",
   myCompWithdraw: "Withdraw",
   myCompTracksSaved: "Tracks updated",

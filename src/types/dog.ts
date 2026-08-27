@@ -37,7 +37,7 @@ export type DogSummary = Pick<Dog, "id" | "nickName" | "sizeEst" | "breed"> &
 /** Dog info for registration */
 export type DogRegistration = Pick<
   Dog,
-  "id" | "nickName" | "officialName" | "sizeEst" | "sizeFci" | "agilityClass" | "jumpClass" | "registerCode" | "idCode" | "generalVaccinationEnd" | "rabiesVaccinationEnd"
+  "id" | "nickName" | "officialName" | "sizeEst" | "sizeFci" | "sizeOfficial" | "sizeOfficialFci" | "agilityClass" | "jumpClass" | "registerCode" | "idCode" | "generalVaccinationEnd" | "rabiesVaccinationEnd"
 >;
 
 /** Dog progression/class upgrade data */

@@ -1,5 +1,26 @@
 # Changelog
 
+## Only the tracks a dog may actually enter (2026-08-27)
+
+Registration listed every track of a competition, so a Midi A1 dog was offered Maxi tracks and A3 tracks and the entry was accepted. Production filters that list against the dog (`isTrackEligible` in organizerPage's CompetitorCompetitions), and now so does this app — in the registration flow and in the track editor, from one shared rule.
+
+The rule: the track's `size` must equal the dog's size code, and the class in `trackType` must not be above the class the dog has reached (`A1 <= A2 <= A3`, `H0 <= H1 <= H2 <= H3`). `Open *` and `Seenior *` have no rank requirement, `tunnelid` needs only the size to match. A confirmed measured class (`sizeOfficial`) wins over the owner's own `sizeEst`, the same way results and protocols resolve size.
+
+| File | Change |
+|------|--------|
+| `src/lib/track-eligibility.ts` | New — `isTrackEligible()`, `dogSizeCode()`, `OPEN_TRACK_TYPES` |
+| `src/app/competitor/register/[id]/page.tsx` | Step 2 lists only eligible tracks; switching dogs clears the selection |
+| `src/app/competitor/competitions/TrackEditor.tsx` | Same filter, against the entry's dog |
+| `src/app/api/competitors/my-bookings/route.ts`, `src/types/{dog,competitor}.ts` | `sizeOfficial` is selected so the filter can prefer the measured class |
+
+The filter is client-side only, matching production — `POST /api/competitors` and `PUT /api/competitors/:id/tracks` still accept any track of the competition. Enforcing it server-side is the safer end state, but it would reject entries the organizer legitimately hand-places, so it is left for a decision rather than assumed.
+
+Verified with `npx tsc --noEmit` and `npx next build`. **Unverified:** against a real database.
+
+**Noticed, not fixed — and it matters for this change:** `src/app/organizer/competition/[id]/TrackForm.tsx` writes the two fields the other way round from the shared database. In `wvn1_competition_tracks` the rows read `track_type = 'A1' | 'H2' | 'Open A' | 'Seenior A' | 'tunnelid'` and `competition_type = 'ametlik' | 'mitteametlik'`, and `dog-progression` already reads `trackType` that way. But `TrackForm` offers `TRACK_TYPES = ["agility", "jumping"]` for `trackType` and `COMPETITION_CLASSES = A0..A3` for `competitionType` (`src/lib/constants.ts`). A track created through this app therefore carries no class in `trackType`, and the new filter will find it ineligible for every dog. Tracks created by the PHP app filter correctly.
+
+---
+
 ## Editing your own entry: tracks and additional info (2026-08-27)
 
 Production's "Võistlused" table has two actions a competitor could not perform here at all: change which tracks you are entered for, and write your own note on the entry. Both are now on the my-competitions page, and both close when registration closes.

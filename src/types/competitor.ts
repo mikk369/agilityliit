@@ -93,6 +93,7 @@ export interface MyRegistration {
     id: number;
     nickName: string;
     sizeEst: string | null;
+    sizeOfficial: string | null;
     agilityClass: string | null;
     jumpClass: string | null;
   };

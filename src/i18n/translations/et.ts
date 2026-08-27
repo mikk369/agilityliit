@@ -156,6 +156,7 @@ const et = {
   myCompBrowse: "Sirvi võistlusi",
   myCompUpcoming: "Tulevased võistlused",
   myCompPast: "Eelmised võistlused",
+  regNoEligibleTracks: "Sellel koeral pole ühtki sobivat rada — kontrolli koera suurust ja klassi.",
   myCompEditTracks: "Muuda radu",
   myCompWithdraw: "Eemalda",
   myCompTracksSaved: "Rajad uuendatud",

@@ -40,6 +40,7 @@ export async function GET() {
             id: true,
             nickName: true,
             sizeEst: true,
+            sizeOfficial: true,
             agilityClass: true,
             jumpClass: true,
           },

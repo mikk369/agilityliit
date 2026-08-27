@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { isTrackEligible } from "@/lib/track-eligibility";
 import { formatDate } from "@/lib/utils";
 import type { DogRegistration, CompetitionTrack } from "@/types";
 import { MessageBanner } from "@/components/ui/MessageBanner";
@@ -153,8 +154,14 @@ export default function RegisterPage({
     );
   }
 
+  // Only the tracks this dog may enter: its size, and no class above the one it
+  // has reached. Without a dog picked yet nothing is eligible.
+  const eligibleTracks = selectedDog
+    ? booking.competitionTracks.filter((track) => isTrackEligible(track, selectedDog))
+    : [];
+
   // Group tracks by date
-  const tracksByDate = booking.competitionTracks.reduce(
+  const tracksByDate = eligibleTracks.reduce(
     (acc, track) => {
       const date = track.competitionDate.split("T")[0];
       if (!acc[date]) acc[date] = [];
@@ -240,7 +247,12 @@ export default function RegisterPage({
                       name="dog"
                       value={dog.id}
                       checked={selectedDogId === dog.id}
-                      onChange={() => setSelectedDogId(dog.id)}
+                      onChange={() => {
+                        setSelectedDogId(dog.id);
+                        // Eligibility is per dog, so a previous dog's tracks
+                        // must not survive the switch.
+                        setSelectedTrackIds([]);
+                      }}
                       disabled={!vaccineOk}
                       className="text-blue-600"
                     />
@@ -330,6 +342,10 @@ export default function RegisterPage({
       {step === 2 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">{t.regSelectTracks}</h2>
+
+          {Object.keys(tracksByDate).length === 0 && (
+            <p className="text-sm text-gray-500">{t.regNoEligibleTracks}</p>
+          )}
 
           {Object.entries(tracksByDate)
             .sort(([a], [b]) => a.localeCompare(b))

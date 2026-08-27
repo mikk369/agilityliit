@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/utils";
+import { isTrackEligible } from "@/lib/track-eligibility";
 import type { Translations } from "@/i18n/translations/et";
 import type { CompetitionTrack, MyRegistration } from "@/types";
 
@@ -78,8 +79,9 @@ export function TrackEditor({
     }
   }
 
+  // Same rule as registration: only what this dog may enter.
   const byDate = new Map<string, CompetitionTrack[]>();
-  for (const track of tracks ?? []) {
+  for (const track of (tracks ?? []).filter((track) => isTrackEligible(track, reg.dog))) {
     const date = track.competitionDate.split("T")[0];
     byDate.set(date, [...(byDate.get(date) ?? []), track]);
   }
@@ -96,7 +98,7 @@ export function TrackEditor({
         {tracks === null ? (
           <div className="animate-pulse h-24 bg-gray-100 rounded" />
         ) : days.length === 0 ? (
-          <p className="text-sm text-gray-500">{t.myCompNoTracks}</p>
+          <p className="text-sm text-gray-500">{t.regNoEligibleTracks}</p>
         ) : (
           days.map(([date, dayTracks]) => (
             <div key={date} className="mb-4 last:mb-0">
