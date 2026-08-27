@@ -14,7 +14,7 @@ export async function PATCH(
     const competitorId = parseInt(id);
 
     const body = await req.json();
-    const { status, remarks, needsMeasurement, needsCompetitionBook } = body;
+    const { status, remarks, needsMeasurement, needsCompetitionBook, handlerId } = body;
 
     const updateData: Record<string, unknown> = {};
     if (status !== undefined) {
@@ -28,6 +28,27 @@ export async function PATCH(
       updateData.needsMeasurement = needsMeasurement;
     if (needsCompetitionBook !== undefined)
       updateData.needsCompetitionBook = needsCompetitionBook;
+
+    // Point the entry at a different existing handler. Handler records are never
+    // written here - an organizer must not be able to rename someone whose row is
+    // shared with their own competitor pages.
+    if (handlerId !== undefined) {
+      const newHandlerId = parseInt(String(handlerId));
+      if (!Number.isInteger(newHandlerId) || newHandlerId <= 0) {
+        return NextResponse.json({ error: "Vigane koerajuht" }, { status: 400 });
+      }
+      const handlerExists = await prisma.handler.findUnique({
+        where: { id: newHandlerId },
+        select: { id: true },
+      });
+      if (!handlerExists) {
+        return NextResponse.json(
+          { error: "Koerajuhti ei leitud" },
+          { status: 404 }
+        );
+      }
+      updateData.handlerId = newHandlerId;
+    }
 
     const competitor = await prisma.competitor.update({
       where: { id: competitorId },

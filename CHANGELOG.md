@@ -1,5 +1,26 @@
 # Changelog
 
+## Koerajuhi vahetamine võistlejate tabelis (2026-08-27)
+
+Võistlejate tabelis sai koerajuhti seni ainult vaadata. Nüüd saab kirje siduda teise olemasoleva koerajuhiga: „Muuda" avab otsitava valiku, mis kitseneb kirjutades. Kasulik vale koerajuhiga registreeringu parandamiseks ilma võistlejat kustutamata ja uuesti lisamata.
+
+Koerajuhi **nime ennast muuta ei saa** — `handlers` rida on inimese enda kirje, jagatud tema võistleja lehtedega. Valik muudab ainult `competitors.handlerId`; koerajuhtide ridu ei kirjutata. (organizerPage'is oli see päris viga — seal oli nimi vaba tekstiväli, mis nimetas inimese kõikjal ümber; vt `../organizerPage` v3.97 ja `../vite-event-calendar` v2.62. Selles rakenduses seda viga polnud, sest ühtki koerajuhi välja polnud võimalik muuta.)
+
+| File | Change |
+|------|--------|
+| `src/components/ui/SearchableSelect.tsx` | New — kirjutades filtreeriv valik; tagastab valitud kirje `id`, mitte sisestatud teksti |
+| `src/app/organizer/competition/[id]/competitors/CompetitorTable.tsx` | „Koerajuht" lahtris „Muuda" nupp, mis avab valiku; uued `handlers` ja `onHandlerChange` propsid |
+| `src/app/organizer/competition/[id]/competitors/page.tsx` | Laeb koerajuhtide nimekirja (`GET /api/handlers`) ja saadab `PATCH /api/competitors/:id` päringu `handlerId`-ga |
+| `src/app/api/competitors/[id]/route.ts` | PATCH võtab valikulise `handlerId` — kontrollib olemasolu, uuendab `competitors.handlerId` |
+
+`SearchableSelect` tagastab teadlikult `id`, mitte teksti: nii ei saa komponenti kasutada olemasoleva kirje ümbernimetamiseks, ainult valimiseks. `GET /api/handlers` oli varem olemas, aga kasutuseta — see on selle esimene tarbija.
+
+Kontrollitud `npx tsc --noEmit` ja `npx next build`. **Kontrollimata:** päris andmebaasi vastu.
+
+**Märgatud, parandamata:** `PATCH /api/competitors/:id` kontrollib ainult rolli (`ORGANIZER`/`ADMIN`), mitte seda, kas kasutaja omab just seda broneeringut — nii et üks korraldaja saab muuta teise võistlust. See kehtis juba `status`, `remarks`, `needsMeasurement` ja `needsCompetitionBook` väljade puhul; `handlerId` järgib sama mustrit. PHP pool kontrollib omanikku (`check_user_owns_booking()`).
+
+---
+
 ## Mõõtmised otsustavad koera võistlusklassi (2026-08-27)
 
 Mõõtmistulemus sisestatakse nüüd sentimeetrites ja klass tuletatakse EKL/FCI piiridest serveripoolselt. Koera võistlusklass muutub alles siis, kui **kaks** mõõtmist annavad **sama** klassi — teine, esimesest erinev mõõtmine klassi ei muuda.

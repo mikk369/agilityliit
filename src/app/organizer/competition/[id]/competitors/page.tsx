@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { CompetitorEntry } from "@/types";
 import { MessageBanner } from "@/components/ui/MessageBanner";
 import { CompetitorTable } from "./CompetitorTable";
+import type { SearchableOption } from "@/components/ui/SearchableSelect";
 import { ExportButton } from "./ExportButton";
 
 export default function CompetitorTablePage({ params }: { params: Promise<{ id: string }> }) {
@@ -14,6 +15,7 @@ export default function CompetitorTablePage({ params }: { params: Promise<{ id: 
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [filter, setFilter] = useState<"all" | "PENDING" | "ACCEPTED">("all");
   const [bookingName, setBookingName] = useState("");
+  const [handlers, setHandlers] = useState<SearchableOption[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -37,6 +39,45 @@ export default function CompetitorTablePage({ params }: { params: Promise<{ id: 
       setMessage({ type: "error", text: "Andmete laadimine ebaõnnestus" });
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Handler list for the per-row picker. Fetched once - the organizer may
+  // reassign an entry to any existing handler, not only entrants of this
+  // competition.
+  useEffect(() => {
+    fetch("/api/handlers")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((rows) =>
+        setHandlers(
+          (Array.isArray(rows) ? rows : []).map(
+            (h: { id: number; handlerName: string; clubName: string | null; country: string | null }) => ({
+              id: h.id,
+              label: h.handlerName,
+              hint: [h.clubName, h.country].filter(Boolean).join(" · ") || null,
+            })
+          )
+        )
+      )
+      .catch(() => setHandlers([]));
+  }, []);
+
+  async function handleHandlerChange(competitorId: number, handlerId: number) {
+    try {
+      const res = await fetch(`/api/competitors/${competitorId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handlerId }),
+      });
+      if (res.ok) {
+        setMessage({ type: "success", text: "Koerajuht muudetud" });
+        fetchData();
+      } else {
+        const err = await res.json();
+        setMessage({ type: "error", text: err.error || "Muutmine ebaõnnestus" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Serveri viga" });
     }
   }
 
@@ -161,7 +202,9 @@ export default function CompetitorTablePage({ params }: { params: Promise<{ id: 
       <CompetitorTable
         competitors={displayed}
         totalCount={competitors.length}
+        handlers={handlers}
         onStatusChange={handleStatusChange}
+        onHandlerChange={handleHandlerChange}
         onDelete={handleDelete}
       />
 

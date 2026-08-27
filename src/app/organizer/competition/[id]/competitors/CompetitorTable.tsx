@@ -1,19 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import type { CompetitorEntry } from "@/types";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
 
 export function CompetitorTable({
   competitors,
   totalCount,
+  handlers,
   onStatusChange,
+  onHandlerChange,
   onDelete,
 }: {
   competitors: CompetitorEntry[];
   totalCount: number;
+  handlers: SearchableOption[];
   onStatusChange: (competitorId: number, newStatus: string) => void;
+  onHandlerChange: (competitorId: number, handlerId: number) => void;
   onDelete: (competitorId: number, name: string) => void;
 }) {
+  // Which row's handler picker is open. A handler's name is never editable -
+  // only which handler the entry belongs to can be changed.
+  const [editingHandlerFor, setEditingHandlerFor] = useState<number | null>(null);
   return (
     <>
       {competitors.length === 0 ? (
@@ -44,11 +53,44 @@ export function CompetitorTable({
                 {competitors.map((comp, idx) => (
                   <tr key={comp.id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{comp.handler.handlerName}</div>
-                      <div className="text-xs text-gray-500">
-                        {[comp.handler.clubName, comp.handler.country].filter(Boolean).join(" · ")}
-                      </div>
+                    <td className="px-4 py-3 min-w-56">
+                      {editingHandlerFor === comp.id ? (
+                        <SearchableSelect
+                          autoFocus
+                          options={handlers}
+                          value={comp.handler.id}
+                          placeholder="Otsi koerajuhti..."
+                          emptyText="Koerajuhti ei leitud"
+                          onCancel={() => setEditingHandlerFor(null)}
+                          onSelect={(handlerId) => {
+                            setEditingHandlerFor(null);
+                            if (handlerId !== comp.handler.id) {
+                              onHandlerChange(comp.id, handlerId);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900">
+                              {comp.handler.handlerName}
+                            </span>
+                            <button
+                              type="button"
+                              title="Vali teine koerajuht"
+                              onClick={() => setEditingHandlerFor(comp.id)}
+                              className="text-xs text-blue-600 hover:text-blue-700"
+                            >
+                              Muuda
+                            </button>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {[comp.handler.clubName, comp.handler.country]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </div>
+                        </>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{comp.dog.nickName}</div>
