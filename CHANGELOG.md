@@ -1,5 +1,38 @@
 # Changelog
 
+## Public competition pages, and the calendar hand-over that never landed (2026-08-27)
+
+A click in the WordPress calendar showed "registreerimine veel suletud" **and** opened the competition anyway, where the page said "Võistlust ei leitud". Two unrelated bugs wearing one costume.
+
+The app half: `/competitions` and `/competitions/[id]` are public in `src/middleware.ts`, but both fetched `/api/bookings`, which is not. An anonymous visitor got `307 -> /api/auth/signin`, the HTML broke `res.json()`, the silent `catch` left the state null, and the page rendered its empty case. Confirmed against production — `/competitions/2` returned 200 while `/api/bookings/2` returned 307. So the public pages had been broken for logged-out visitors since they were made public; testing while signed in hid it. Part 3 of `calendar-handoff-plan.md` assumed `/competitions/[id]` "is already public and returns 200 anonymously" (finding 4) — true of the page, not of the data behind it.
+
+| Area | File | Change |
+|------|------|--------|
+| API | `src/app/api/public/competitions/route.ts` (new) | Anonymous competition list, `BOOKED` only, with a computed `registrationOpen` |
+| API | `src/app/api/public/competitions/[id]/route.ts` (new) | Anonymous detail for **any** booking — the calendar links to PENDING ones too |
+| Page | `src/app/competitions/page.tsx` | Reads the public feed; amber "Ootab kinnitamist" badge for PENDING |
+| Page | `src/app/competitions/[id]/page.tsx` | Reads the public feed; status is three-state, not open/closed |
+| Page | `src/app/organizer/competition/[id]/page.tsx` | Amber pill in the header while PENDING |
+| Page | `src/app/organizer/competition/[id]/SettingsTab.tsx` | Pending notice; reg-status select and save disabled until an admin approves |
+| Types | `src/types/booking.ts` | `PublicCompetitionListItem`, `PublicCompetitionDetail` |
+| i18n | `src/i18n/translations/{et,en}.ts` | `compRegPending`, `compDetailPending`, `compDetailPendingText`, `compDetailClubEvent`, `compDetailEnded` |
+
+**PENDING was invisible, which made the whole flow unreadable.** Every non-open state rendered as "Registreerimine suletud", so a date reservation waiting on an admin looked like a competition whose organizer had not opened entries yet — a competitor could wait for a registration that was never going to open. The three states are now distinct end to end: organizer creates (PENDING) -> admin approves at `/admin/bookings` (BOOKED) -> organizer opens registration (`reg_open`).
+
+The organizer's Seaded tab disables the registration controls while PENDING rather than letting them be set. `isRegistrationOpen()` refuses anything that is not `BOOKED`, so the setting had no effect anyway — it just looked like it did.
+
+**Wording is split by audience on purpose.** Public surfaces say "Ootab kinnitamist"; only the organizer's own pages name the admin ("Võistlus ootab admini kinnitust"), because that is the person they are waiting on. A `CLUBEVENT` gets no special text at all — it shows the same message as any other entry with nothing to register for.
+
+**`email` and `phone` are now readable anonymously** through the public detail endpoint. Deliberate: `bookingSchema` requires them precisely so they can be published with the competition, and the page already displayed them to any signed-in user. But it is a step from "any account" to "anyone", and the privacy note in Part 2 of `calendar-handoff-plan.md` names these exact fields. Dropping them from the `select` is a one-line change if that trade stops being worth it.
+
+**The other half of the fix is in `../vite-event-calendar`, not this repo.** `mapEvents` spread the API event, and `url` is a FullCalendar built-in: an event carrying it renders as a real `<a href>` and navigates before `eventClick` can stop it. Renamed to `appUrl`, plus a `preventDefault()`. That bundle has to be rebuilt and copied into `booking_calendar/dist/` to take effect — `dist/` is gitignored there, so it does not travel with a commit.
+
+Verified with `npx tsc --noEmit` and `npx next build`, and the calendar with `npm run build`. **Not verified:** the new endpoints against real PENDING and CLUBEVENT rows, and a real click from the WordPress page — the deployed calendar bundle is still the old one. The pre-existing eslint error in `src/app/competitions/page.tsx:18` (`fetchBookings` used before declaration) was left alone; it predates this change.
+
+**Noticed, not fixed:** the legacy WP data uses competition types like `klubimeistrivõistlus` that are not in `COMPETITION_TYPES` (`src/lib/constants.ts:40`). Imported rows will carry a `competitionType` the app never offers. Belongs in `import-old-data-plan.md` as a mapping step.
+
+---
+
 ## Deployment docs, and retire REBUILD-PLAN.md (2026-08-26)
 
 Phase 8 was the last thing left in the rebuild plan, so the plan is now a record of finished work. What remains of deployment is documentation, not code: the app is on shared hosting (Zone), where the panel already proxies the subdomain to a local port and PM2 runs the app on it.

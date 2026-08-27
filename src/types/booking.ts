@@ -79,3 +79,52 @@ export interface CalendarEvent {
   url: string;
 }
 
+
+/**
+ * Public competition list item — `/api/public/competitions`.
+ *
+ * `registrationOpen` is computed server-side by `isRegistrationOpen()`, the
+ * same rule the calendar feed and `POST /api/competitors` use, so the badge on
+ * the page can never disagree with what the API will accept.
+ */
+export interface PublicCompetitionListItem {
+  id: number;
+  startDate: string;
+  endDate: string;
+  organizerName: string;
+  clubName: string;
+  location: string;
+  competitionType: string;
+  status: string;
+  regStatus: string | null;
+  regCloseDate: string | null;
+  registrationOpen: boolean;
+}
+
+/** Public competition detail — `/api/public/competitions/[id]`. */
+export interface PublicCompetitionDetail {
+  id: number;
+  startDate: string;
+  endDate: string;
+  organizerName: string;
+  clubName: string;
+  email: string;
+  phone: string;
+  location: string;
+  competitionType: string;
+  competitionClasses: string | null;
+  referee: string[];
+  info: string | null;
+  status: string;
+  regStatus: string | null;
+  regCloseDate: string | null;
+  registrationOpen: boolean;
+  competitionInfo: {
+    descriptionEst: string | null;
+    descriptionEng: string | null;
+  } | null;
+  competitionTracks: Pick<
+    CompetitionTrack,
+    "id" | "competitionDate" | "letter" | "trackType" | "size" | "competitionType" | "referee" | "isRelay"
+  >[];
+}

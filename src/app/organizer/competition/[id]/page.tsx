@@ -202,6 +202,11 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
             {booking.startDate !== booking.endDate && ` – ${formatDate(booking.endDate)}`}
             {" · "}{booking.location}
           </p>
+          {booking.status === "PENDING" && (
+            <p className="mt-2 inline-block text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">
+              Võistlus ootab admini kinnitust
+            </p>
+          )}
         </div>
         <div className="flex gap-2">
           {SUBPAGES.map(({ segment, label }) => (
@@ -280,6 +285,7 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
         <SettingsTab
           initialRegStatus={booking.regStatus || "reg_open"}
           initialRegCloseDate={booking.regCloseDate ? booking.regCloseDate.split("T")[0] : ""}
+          bookingStatus={booking.status}
           onSave={handleSaveRegSettings}
           onDelete={handleDeleteCompetition}
         />

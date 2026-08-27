@@ -172,6 +172,7 @@ const en: Translations = {
   compNoPast: "No past competitions found.",
   compRegOpen: "Reg. open",
   compRegClosed: "Reg. closed",
+  compRegPending: "Awaiting confirmation",
   compView: "View",
   compRegister: "Register",
   compRegCloseDate: (date: string) => `Reg. closing date: ${date}`,
@@ -192,6 +193,11 @@ const en: Translations = {
   compDetailEmail: "Email",
   compDetailPhone: "Phone",
   compDetailJudges: "Judges",
+  compDetailPending: "Awaiting confirmation",
+  compDetailPendingText:
+    "This date is reserved, but the competition is not confirmed yet. Registration opens once it is confirmed.",
+  compDetailClubEvent: "Club event",
+  compDetailEnded: "Competition has ended",
   compDetailNotFound: "Competition not found.",
 
   // Registration flow

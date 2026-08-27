@@ -170,6 +170,7 @@ const et = {
   compNoPast: "Eelmisi võistlusi ei leitud.",
   compRegOpen: "Reg. avatud",
   compRegClosed: "Reg. suletud",
+  compRegPending: "Ootab kinnitamist",
   compView: "Vaata",
   compRegister: "Registreeru",
   compRegCloseDate: (date: string) => `Reg. sulgemise kuupäev: ${date}`,
@@ -190,6 +191,14 @@ const et = {
   compDetailEmail: "E-post",
   compDetailPhone: "Telefon",
   compDetailJudges: "Kohtunikud",
+  compDetailPending: "Ootab kinnitamist",
+  // No mention of who confirms: out here the useful fact is that the date is
+  // taken and the competition is not confirmed. The organizer's own page names
+  // the admin, because that is the person waiting on them.
+  compDetailPendingText:
+    "See kuupäev on broneeritud, aga võistlus ootab veel kinnitamist. Registreerimine avaneb pärast kinnitamist.",
+  compDetailClubEvent: "Klubiüritus",
+  compDetailEnded: "Võistlus on lõppenud",
   compDetailNotFound: "Võistlust ei leitud.",
 
   // Registration flow

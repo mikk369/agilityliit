@@ -5,37 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { formatDate } from "@/lib/utils";
-
-interface BookingDetail {
-  id: number;
-  startDate: string;
-  endDate: string;
-  organizerName: string;
-  clubName: string;
-  email: string;
-  phone: string;
-  location: string;
-  competitionType: string;
-  status: string;
-  regStatus: string | null;
-  regCloseDate: string | null;
-  referee: string[] | null;
-  info: string | null;
-  competitionInfo: {
-    descriptionEst: string | null;
-    descriptionEng: string | null;
-  } | null;
-  competitionTracks: {
-    id: number;
-    competitionDate: string;
-    letter: string;
-    trackType: string;
-    size: string;
-    competitionType: string;
-    referee: string | null;
-    isRelay: boolean;
-  }[];
-}
+import type { PublicCompetitionDetail } from "@/types";
 
 export default function CompetitionDetailPage({
   params,
@@ -45,13 +15,16 @@ export default function CompetitionDetailPage({
   const { id } = use(params);
   const { data: session } = useSession();
   const { t, locale } = useTranslation();
-  const [booking, setBooking] = useState<BookingDetail | null>(null);
+  const [booking, setBooking] = useState<PublicCompetitionDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`/api/bookings/${id}`);
+        // The public endpoint, not /api/bookings/[id]: this page is the landing
+        // target for every click in the WordPress calendar, including clicks by
+        // visitors with no session at all.
+        const res = await fetch(`/api/public/competitions/${id}`);
         if (res.ok) setBooking(await res.json());
       } catch {
         // silent
@@ -81,9 +54,23 @@ export default function CompetitionDetailPage({
     );
   }
 
-  const isOpen = booking.regStatus !== "reg_closed";
+  // Server-computed by isRegistrationOpen() — the same rule POST /api/competitors
+  // enforces, so the page can never promise something the API will refuse.
+  const isOpen = booking.registrationOpen;
+  const isPending = booking.status === "PENDING";
+  const isClubEvent = booking.status === "CLUBEVENT";
   const isPast = new Date(booking.endDate) < new Date();
   const isCompetitor = session?.user?.role === "COMPETITOR";
+
+  const statusBadge = isPending
+    ? { label: t.compDetailPending, className: "bg-amber-100 text-amber-700" }
+    : isClubEvent
+      ? { label: t.compDetailClubEvent, className: "bg-purple-100 text-purple-700" }
+      : isPast
+        ? { label: t.compDetailEnded, className: "bg-gray-100 text-gray-600" }
+        : isOpen
+          ? { label: t.compDetailRegOpen, className: "bg-green-100 text-green-700" }
+          : { label: t.compDetailRegClosed, className: "bg-red-100 text-red-700" };
 
   // Show description based on language
   const description = locale === "en" && booking.competitionInfo?.descriptionEng
@@ -133,21 +120,23 @@ export default function CompetitionDetailPage({
             </div>
           </div>
           <div className="shrink-0">
-            {!isPast && (
-              <span
-                className={`text-xs px-3 py-1 rounded-full ${
-                  isOpen
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {isOpen ? t.compDetailRegOpen : t.compDetailRegClosed}
-              </span>
-            )}
+            <span
+              className={`text-xs px-3 py-1 rounded-full whitespace-nowrap ${statusBadge.className}`}
+            >
+              {statusBadge.label}
+            </span>
           </div>
         </div>
 
-        {session && isCompetitor && isOpen && !isPast && (
+        {isPending && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+              {t.compDetailPendingText}
+            </p>
+          </div>
+        )}
+
+        {session && isCompetitor && isOpen && (
           <div className="mt-4 pt-4 border-t border-gray-100">
             <Link
               href={`/competitor/register/${booking.id}`}

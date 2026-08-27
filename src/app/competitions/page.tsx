@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { formatDate } from "@/lib/utils";
-import type { BookingListItem } from "@/types";
+import type { PublicCompetitionListItem } from "@/types";
 
 export default function CompetitionsPage() {
   const { data: session } = useSession();
   const { t, locale } = useTranslation();
-  const [bookings, setBookings] = useState<BookingListItem[]>([]);
+  const [bookings, setBookings] = useState<PublicCompetitionListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
 
@@ -20,7 +20,10 @@ export default function CompetitionsPage() {
 
   async function fetchBookings() {
     try {
-      const res = await fetch("/api/bookings?status=BOOKED");
+      // The public feed, not /api/bookings — this page is reachable without a
+      // session (the WordPress calendar links into it), and /api/bookings is
+      // behind the auth middleware.
+      const res = await fetch("/api/public/competitions");
       if (res.ok) {
         setBookings(await res.json());
       }
@@ -92,6 +95,7 @@ export default function CompetitionsPage() {
               isCompetitor={session?.user?.role === "COMPETITOR"}
               regOpenLabel={t.compRegOpen}
               regClosedLabel={t.compRegClosed}
+              regPendingLabel={t.compRegPending}
               viewLabel={t.compView}
               registerLabel={t.compRegister}
               regCloseDateFn={t.compRegCloseDate}
@@ -110,21 +114,26 @@ function CompetitionCard({
   isCompetitor,
   regOpenLabel,
   regClosedLabel,
+  regPendingLabel,
   viewLabel,
   registerLabel,
   regCloseDateFn,
 }: {
-  booking: BookingListItem;
+  booking: PublicCompetitionListItem;
   locale: string;
   isLoggedIn: boolean;
   isCompetitor: boolean;
   regOpenLabel: string;
   regClosedLabel: string;
+  regPendingLabel: string;
   viewLabel: string;
   registerLabel: string;
   regCloseDateFn: (date: string) => string;
 }) {
-  const isOpen = booking.regStatus !== "reg_closed";
+  // Server-computed: it already accounts for admin approval, the organizer
+  // closing registration and the deadline passing.
+  const isOpen = booking.registrationOpen;
+  const isPending = booking.status === "PENDING";
   const isPast = new Date(booking.endDate) < new Date();
 
   return (
@@ -138,12 +147,18 @@ function CompetitionCard({
             {!isPast && (
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
-                  isOpen
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
+                  isPending
+                    ? "bg-amber-100 text-amber-700"
+                    : isOpen
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
                 }`}
               >
-                {isOpen ? regOpenLabel : regClosedLabel}
+                {isPending
+                  ? regPendingLabel
+                  : isOpen
+                    ? regOpenLabel
+                    : regClosedLabel}
               </span>
             )}
           </div>
