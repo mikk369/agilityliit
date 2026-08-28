@@ -1,5 +1,21 @@
 # Changelog
 
+## Both migrations are applied (2026-08-29)
+
+`scripts/migration-2026-08-28.sql` has been run in full against the database.
+
+- Part 1 — `SELECT id, nick_name, size_est FROM dogs WHERE size_est IN ('XS','S','M','SL','L')` returns no rows, so no dog is left holding a bare size code.
+- Part 2 — the columns are `bookings.competition_officiality` and `competition_tracks.officiality`; the schema was pointed at them in the entry below, which is what cleared the `{"error":"Serveri viga"}` on registering a competition.
+
+Still open, both needing a reachable `DATABASE_URL` and neither affecting how the app runs:
+
+- `npx prisma migrate resolve --applied 0_init`, after the drift check in `prisma/migrations/README.md`. Until it runs, `prisma migrate deploy` against that database would try to create tables that already exist.
+- Bookings still holding `Ametlik võistlus`, which is not one of the six võistlustüüp values the form now offers — it displays, but cannot be re-picked when editing. `UPDATE bookings SET competition_officiality = 'Rahvuslik võistlus' WHERE competition_officiality = 'Ametlik võistlus';` when you have decided that is the right target. `Mitteametlik võistlus` is in the list and needs nothing.
+
+No code changed. This entry records what the database now looks like, because the two entries below say the migrations had not been run.
+
+---
+
 ## The renamed columns are live (2026-08-28)
 
 `scripts/migration-2026-08-28.sql` part 2 has been run: `bookings.competition_type` is now `competition_officiality` and `competition_tracks.competition_type` is now `officiality`. The schema's `@map`s still pointed at the old names, so every booking and track query hit a column that no longer existed and the routes answered `{"error":"Serveri viga"}`.
@@ -52,7 +68,7 @@ The reader now accepts either shape. Matching a bare code anywhere in the string
 | `src/lib/track-eligibility.ts` | Imports and re-exports it; the eligibility rule itself is unchanged |
 | `scripts/migration-2026-08-28.sql` | New — rewrites bare codes in `dogs.size_est` / `size_fci` / `size_official` / `size_official_fci` to labels |
 
-Checked against the stored shapes: `Midi(M)`, `M`, `m` and ` SL ` resolve; `Väikemaksi(SL)` gives `SL`, not `S`; `bogus` and `null` give `''`. A dog at bare `M` / A2 / H2 is now eligible for M-size A1, A2, H2, Seenior A and tunnelid, and rejected for A3 and for L-size tracks — previously it was rejected for every one of them. **Unverified:** against a real database — the migration has not been run.
+Checked against the stored shapes: `Midi(M)`, `M`, `m` and ` SL ` resolve; `Väikemaksi(SL)` gives `SL`, not `S`; `bogus` and `null` give `''`. A dog at bare `M` / A2 / H2 is now eligible for M-size A1, A2, H2, Seenior A and tunnelid, and rejected for A3 and for L-size tracks — previously it was rejected for every one of them. The migration has since been run: no dog is left with a bare size code (see the 2026-08-29 entry above).
 
 ---
 
