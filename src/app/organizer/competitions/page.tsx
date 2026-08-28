@@ -13,7 +13,7 @@ interface Booking {
   organizerName: string;
   clubName: string;
   location: string;
-  competitionType: string;
+  competitionOfficiality: string;
   status: string;
   regStatus: string | null;
   regCloseDate: string | null;
@@ -135,7 +135,7 @@ function CompetitionCard({ booking }: { booking: Booking }) {
           <p className="text-sm text-gray-600">{booking.location}</p>
           <div className="flex items-center gap-2 mt-2">
             <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
-              {booking.competitionType}
+              {booking.competitionOfficiality}
             </span>
             <span className="text-xs text-gray-500">{booking.clubName}</span>
           </div>

@@ -127,7 +127,7 @@ export default function PublicResultsPage({
               </span>
               <span>{booking.location}</span>
               {booking.clubName && <span>{booking.clubName}</span>}
-              <span>{booking.competitionType}</span>
+              <span>{booking.competitionOfficiality}</span>
             </div>
           </div>
           {tracks.length > 0 && (

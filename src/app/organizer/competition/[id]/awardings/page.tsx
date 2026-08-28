@@ -8,7 +8,7 @@ interface TrackOption {
   letter: string;
   trackType: string;
   size: string;
-  competitionType: string;
+  officiality: string;
   competitionDate: string;
   sortOrder: number;
 }

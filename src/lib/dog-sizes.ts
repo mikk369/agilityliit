@@ -28,6 +28,44 @@ export const DOG_SIZE_CLASSES = [
 
 export type DogSizeClass = (typeof DOG_SIZE_CLASSES)[number];
 
+/**
+ * The bare size code inside each class label. `competition_tracks.size` holds
+ * exactly these codes, so this is the bridge between a dog and a track.
+ */
+const CODE_TO_LABEL: Record<string, DogSizeClass> = {
+  XS: 'Väikemini(XS)',
+  S: 'Mini(S)',
+  M: 'Midi(M)',
+  SL: 'Väikemaksi(SL)',
+  L: 'Maksi(L)',
+};
+
+/**
+ * The size code for a stored size: "Midi(M)" -> "M". Returns '' for anything
+ * unrecognised.
+ *
+ * Dogs are meant to carry the full Estonian label, but rows written before the
+ * dog form was fixed hold the bare code instead. A dog whose size resolves to
+ * '' matches no track and no size group at all - so the bare code is accepted
+ * here rather than silently hiding every track from its owner.
+ */
+export function dogSizeCode(size: string | null | undefined): string {
+  if (!size) return '';
+  const trimmed = String(size).trim();
+
+  const fromLabel = trimmed.match(/\((XS|S|M|SL|L)\)/)?.[1];
+  if (fromLabel) return fromLabel;
+
+  const code = trimmed.toUpperCase();
+  return code in CODE_TO_LABEL ? code : '';
+}
+
+/** The full class label for a size stored either way; '' when unrecognised. */
+export function dogSizeLabel(size: string | null | undefined): DogSizeClass | '' {
+  const code = dogSizeCode(size);
+  return code ? CODE_TO_LABEL[code] : '';
+}
+
 /** Upper bound in cm per class; `null` marks the open-ended top class. */
 const THRESHOLDS: Record<SizeStandard, { label: DogSizeClass; max: number | null }[]> = {
   EST: [

@@ -40,7 +40,7 @@ export async function GET(
                 letter: true,
                 trackType: true,
                 size: true,
-                competitionType: true,
+                officiality: true,
                 competitionDate: true,
               },
             },

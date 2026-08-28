@@ -66,7 +66,7 @@ export async function GET(
             id: true,
             letter: true,
             trackType: true,
-            competitionType: true,
+            officiality: true,
             competitionDate: true,
             booking: {
               select: { organizerName: true },

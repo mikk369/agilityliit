@@ -19,7 +19,7 @@ interface TrackWithCount {
   letter: string;
   trackType: string;
   size: string;
-  competitionType: string;
+  officiality: string;
   referee: string | null;
   competitorCount: number;
 }
@@ -130,7 +130,7 @@ export default function ResultsOverviewPage({ params }: { params: Promise<{ id: 
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-900">{track.trackType}</span>
                             <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">{track.size}</span>
-                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">{track.competitionType}</span>
+                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">{track.officiality}</span>
                           </div>
                           {track.referee && (
                             <p className="text-xs text-gray-500 mt-0.5">Kohtunik: {track.referee}</p>

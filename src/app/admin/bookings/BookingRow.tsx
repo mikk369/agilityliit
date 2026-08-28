@@ -27,7 +27,7 @@ export function BookingRow({
       <td className="px-4 py-3">{booking.clubName}</td>
       <td className="px-4 py-3">{booking.organizerName}</td>
       <td className="px-4 py-3">{booking.location}</td>
-      <td className="px-4 py-3 text-gray-500">{booking.competitionType}</td>
+      <td className="px-4 py-3 text-gray-500">{booking.competitionOfficiality}</td>
       <td className="px-4 py-3">
         <StatusBadge status={booking.status} />
       </td>

@@ -24,7 +24,7 @@ export async function GET(
             organizerName: true,
             clubName: true,
             location: true,
-            competitionType: true,
+            competitionOfficiality: true,
           },
         },
       },

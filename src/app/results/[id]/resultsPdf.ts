@@ -4,7 +4,7 @@ import type { ResultsBooking, TrackData } from "./types";
 export function exportResultsToPDF(booking: ResultsBooking, tracks: TrackData[]) {
   let html = `<h1>Tulemused</h1>
     <h2>${booking.organizerName}</h2>
-    <p>${formatDate(booking.startDate)}${booking.startDate !== booking.endDate ? ` – ${formatDate(booking.endDate)}` : ""} | ${booking.location}${booking.clubName ? ` | ${booking.clubName}` : ""} | ${booking.competitionType}</p>`;
+    <p>${formatDate(booking.startDate)}${booking.startDate !== booking.endDate ? ` – ${formatDate(booking.endDate)}` : ""} | ${booking.location}${booking.clubName ? ` | ${booking.clubName}` : ""} | ${booking.competitionOfficiality}</p>`;
 
   // Group by date
   const dates = getUniqueDates(tracks);
@@ -18,7 +18,7 @@ export function exportResultsToPDF(booking: ResultsBooking, tracks: TrackData[])
 
     for (const td of dateTracks) {
       const { track, parameters, competitors } = td;
-      html += `<h4>${track.letter} - ${track.trackType} | ${track.size} | ${track.competitionType}${track.referee ? ` | Kohtunik: ${track.referee}` : ""}</h4>`;
+      html += `<h4>${track.letter} - ${track.trackType} | ${track.size} | ${track.officiality}${track.referee ? ` | Kohtunik: ${track.referee}` : ""}</h4>`;
 
       if (parameters.length > 0) {
         html += `<table class="params"><thead><tr><th>Grupp</th><th>Pikkus</th><th>Kiirus</th><th>Normiaeg</th><th>Maksimaeg</th></tr></thead><tbody>`;

@@ -1,5 +1,45 @@
 # Changelog
 
+## `competition_type` meant two different things in two tables (2026-08-28)
+
+`bookings.competition_type` is the võistlustüüp — CACIAG, Rahvuslik võistlus, Tõuühingu meistrivõistlus. `competition_tracks.competition_type` is ametlik / mitteametlik. One name, two unrelated fields, which is what put the class and the officiality in the wrong columns once already (see the 2026-08-27 entry below). They are now read under names that say which is which: `officiality` on a track, `competitionOfficiality` on a booking. `competition_tracks.track_type` is unchanged — it holds the class (A1 / H1 / Open A / tunnelid) and was already right.
+
+The labels were inverted too: the public competition table printed `trackType` under "Tüüp" and the officiality under "Klass", and the organizer's track table did the same.
+
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | `CompetitionTrack.officiality` and `Booking.competitionOfficiality`, both still `@map`ed to `competition_type` until the migration runs |
+| `src/lib/constants.ts` | `COMPETITION_TYPES` → `COMPETITION_OFFICIALITY`, now carrying production's six võistlustüüp values from organizerPage's RegisterBookings; every section names the column it belongs to |
+| `src/lib/validations.ts` | `officiality` / `competitionOfficiality`; the three track messages each name their own field |
+| `src/i18n/translations/*.ts` | `compDetailCompClass` / `compDetailSizeGroup` / `compDetailOfficiality`; `regTrack` takes class, size and officiality in that order |
+| `TrackForm.tsx`, `TrackTable.tsx`, `competitions/[id]/page.tsx` | Võistlusklass / Suurusrühm / Võistlustüüp, each over the field it describes |
+| `InfoTab.tsx`, `organizer/new/page.tsx` | The booking label is Võistlustüüp, one word, as production spells it |
+| `scripts/migration-2026-08-28.sql` | New — renames the columns to `competition_officiality` and `officiality` |
+
+`/api/public/calendar` still emits the `competitionType` key: the WordPress calendar on agilityliit.ee reads it, so that contract keeps the old name while the value comes from `competitionOfficiality`.
+
+The two fields deliberately share one label, "Võistlustüüp". The comment above `TRACK_OFFICIALITY` records that and lists which values belong to which, so a track is never read by its label alone.
+
+Verified with `npx tsc --noEmit`, `npx eslint` and `npx next build`. **Unverified:** against a real database — the column rename has not been run, and until it is, both fields keep their `@map("competition_type")`.
+
+---
+
+## A dog stored with a bare size code could enter no track at all (2026-08-28)
+
+`dogSizeCode()` read the size out of the parentheses of an Estonian label (`Midi(M)` → `M`) and returned `''` for anything else. Dogs added before the dog form was fixed (2026-08-27, below) hold the bare `M`, so `isTrackEligible()` bailed on its first check and the registration page said "Sellel koeral pole ühtki sobivat rada" for a dog whose size and class were both fine.
+
+The reader now accepts either shape. Matching a bare code anywhere in the string would be wrong — `Väikemaksi(SL)` would hit the `S` alternative and resolve to Mini — so the label branch requires the parentheses and only a whole-string match falls through to the bare code.
+
+| File | Change |
+|------|--------|
+| `src/lib/dog-sizes.ts` | `dogSizeCode()` moved here from track-eligibility and reads both shapes; new `dogSizeLabel()` normalises the other way |
+| `src/lib/track-eligibility.ts` | Imports and re-exports it; the eligibility rule itself is unchanged |
+| `scripts/migration-2026-08-28.sql` | New — rewrites bare codes in `dogs.size_est` / `size_fci` / `size_official` / `size_official_fci` to labels |
+
+Checked against the stored shapes: `Midi(M)`, `M`, `m` and ` SL ` resolve; `Väikemaksi(SL)` gives `SL`, not `S`; `bogus` and `null` give `''`. A dog at bare `M` / A2 / H2 is now eligible for M-size A1, A2, H2, Seenior A and tunnelid, and rejected for A3 and for L-size tracks — previously it was rejected for every one of them. **Unverified:** against a real database — the migration has not been run.
+
+---
+
 ## Dog sizes are the Estonian class label, not a bare code (2026-08-27)
 
 `dogs.size_est` / `size_fci` hold `Väikemini(XS) | Mini(S) | Midi(M) | Väikemaksi(SL) | Maksi(L)` — the WordPress dog form writes exactly those, the measurement logic writes exactly those into `size_official`, and every size comparison expects them. This app's dog form offered the bare codes (`XS / S / M / SL / L`) instead, so a dog added here matched no track and no size grouping. The bare code belongs to `competition_tracks.size`, a different column with a different job.

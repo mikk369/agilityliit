@@ -19,7 +19,7 @@ export async function GET(
         location: true,
         startDate: true,
         endDate: true,
-        competitionType: true,
+        competitionOfficiality: true,
         protocolPublished: true,
       },
     });
@@ -99,7 +99,7 @@ export async function GET(
           letter: track.letter,
           trackType: track.trackType,
           size: track.size,
-          competitionType: track.competitionType,
+          officiality: track.officiality,
           referee: track.referee,
           sizeStandard: track.sizeStandard,
           sortOrder: track.sortOrder,

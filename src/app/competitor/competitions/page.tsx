@@ -272,7 +272,7 @@ function RegistrationCard({
             {reg.booking.location}
           </p>
           <p className="text-sm text-gray-600 mt-1">
-            {reg.booking.competitionType}
+            {reg.booking.competitionOfficiality}
             {reg.booking.clubName && ` · ${reg.booking.clubName}`}
           </p>
           {judges.length > 0 && (
@@ -311,7 +311,7 @@ function RegistrationCard({
                       key={i}
                       className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
                     >
-                      {track.letter} - {track.trackType} ({track.competitionType})
+                      {track.letter} - {track.trackType} ({track.officiality})
                     </span>
                   ))}
                 </div>

@@ -208,9 +208,9 @@ const en: Translations = {
   compDetailInfo: "Competition info",
   compDetailTracks: "Tracks",
   compDetailTrack: "Track",
-  compDetailType: "Type",
-  compDetailSize: "Size",
-  compDetailClass: "Class",
+  compDetailCompClass: "Competition class",
+  compDetailSizeGroup: "Size group",
+  compDetailOfficiality: "Competition type",
   compDetailJudge: "Judge",
   compDetailClub: "Club",
   compDetailEmail: "Email",
@@ -243,8 +243,8 @@ const en: Translations = {
   regCompetition: "Competition",
   regDog: "Dog",
   regSelectedTracks: "Selected tracks",
-  regTrack: (date: string, letter: string, type: string, cls: string) =>
-    `${date} — Track ${letter} (${type}, ${cls})`,
+  regTrack: (date: string, letter: string, trackType: string, size: string, officiality: string) =>
+    `${date} — Track ${letter} (${trackType} / ${size} / ${officiality})`,
   regConfirm: "Confirm registration",
   regSubmitting: "Registering...",
   regFailed: "Registration failed",

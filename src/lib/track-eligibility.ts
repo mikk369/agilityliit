@@ -8,6 +8,8 @@
  * organizerPage/src/competitorPage/competitorSubPages/CompetitorCompetitions.tsx.
  */
 
+import { dogSizeCode } from "@/lib/dog-sizes";
+
 /** Classes with no rank requirement: any dog of the matching size may enter. */
 export const OPEN_TRACK_TYPES = new Set([
   "Open A",
@@ -27,14 +29,8 @@ export const isOpenTrackType = (trackType: string): boolean =>
 const isAgilityClass = (trackType: string) => /^A[1-3]$/.test(trackType);
 const isJumpClass = (trackType: string) => /^H[0-3]$/.test(trackType);
 
-/**
- * The size code inside a class label: "Midi(M)" -> "M".
- * Tracks store the bare code, dogs store the full Estonian label.
- */
-export function dogSizeCode(sizeLabel: string | null | undefined): string {
-  if (!sizeLabel) return "";
-  return sizeLabel.match(/\((XS|S|M|SL|L)\)/)?.[1] ?? "";
-}
+/** Re-exported: eligibility callers need the same size code. */
+export { dogSizeCode } from "@/lib/dog-sizes";
 
 export function isTrackEligible(
   track: { trackType: string; size: string },

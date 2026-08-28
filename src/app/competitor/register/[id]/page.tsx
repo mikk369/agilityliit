@@ -16,7 +16,7 @@ interface BookingInfo {
   startDate: string;
   endDate: string;
   location: string;
-  competitionType: string;
+  officiality: string;
   regStatus: string | null;
   competitionTracks: CompetitionTrack[];
 }
@@ -389,7 +389,7 @@ export default function RegisterPage({
                           {track.size}
                         </span>
                         <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
-                          {track.competitionType}
+                          {track.officiality}
                         </span>
                         {track.isRelay && (
                           <span className="text-xs text-orange-600">{t.relay}</span>
@@ -475,7 +475,7 @@ export default function RegisterPage({
                   if (!track) return null;
                   return (
                     <p key={trackId} className="text-sm text-gray-700">
-                      {t.regTrack(formatDate(track.competitionDate, locale), track.letter, track.trackType, track.competitionType)}
+                      {t.regTrack(formatDate(track.competitionDate, locale), track.letter, track.trackType, track.size, track.officiality)}
                     </p>
                   );
                 })}

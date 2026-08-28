@@ -110,7 +110,7 @@ export default function CompetitionDetailPage({
                   ` – ${formatDate(booking.endDate, locale)}`}
               </p>
               <p>{booking.location}</p>
-              <p>{booking.competitionType}</p>
+              <p>{booking.competitionOfficiality}</p>
               <p>{t.compDetailClub}: {booking.clubName}</p>
               <p>{t.compDetailEmail}: {booking.email}</p>
               <p>{t.compDetailPhone}: {booking.phone}</p>
@@ -178,13 +178,13 @@ export default function CompetitionDetailPage({
                           {t.compDetailTrack}
                         </th>
                         <th className="text-left py-2 px-3 font-medium text-gray-700">
-                          {t.compDetailType}
+                          {t.compDetailCompClass}
                         </th>
                         <th className="text-left py-2 px-3 font-medium text-gray-700">
-                          {t.compDetailSize}
+                          {t.compDetailSizeGroup}
                         </th>
                         <th className="text-left py-2 px-3 font-medium text-gray-700">
-                          {t.compDetailClass}
+                          {t.compDetailOfficiality}
                         </th>
                         <th className="text-left py-2 px-3 font-medium text-gray-700">
                           {t.compDetailJudge}
@@ -207,7 +207,7 @@ export default function CompetitionDetailPage({
                           </td>
                           <td className="py-2 px-3">{track.trackType}</td>
                           <td className="py-2 px-3">{track.size}</td>
-                          <td className="py-2 px-3">{track.competitionType}</td>
+                          <td className="py-2 px-3">{track.officiality}</td>
                           <td className="py-2 px-3 text-gray-500">
                             {track.referee || "—"}
                           </td>

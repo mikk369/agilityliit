@@ -66,7 +66,7 @@ export async function POST(
         letter: data.letter,
         trackType: data.trackType,
         size: data.size,
-        competitionType: data.competitionType,
+        officiality: data.officiality,
         referee: data.referee || null,
         sizeStandard: data.sizeStandard || null,
         sortOrder: data.sortOrder || 0,

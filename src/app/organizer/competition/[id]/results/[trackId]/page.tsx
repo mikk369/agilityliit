@@ -10,7 +10,7 @@ interface TrackData {
   letter: string;
   trackType: string;
   size: string;
-  competitionType: string;
+  officiality: string;
   referee: string | null;
   booking: { id: number; organizerName: string; clubName: string };
 }
@@ -309,7 +309,7 @@ export default function TrackResultEntryPage({ params }: { params: Promise<{ id:
           Rada {track.letter} – {track.trackType}
         </h1>
         <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">{track.size}</span>
-        <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">{track.competitionType}</span>
+        <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">{track.officiality}</span>
       </div>
       <p className="text-sm text-gray-600 mb-1">{track.booking.organizerName}</p>
       <p className="text-sm text-gray-500 mb-6">

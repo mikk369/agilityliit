@@ -15,7 +15,7 @@ export type TrackFormData = {
   letter: string;
   trackType: string;
   size: string;
-  competitionType: string;
+  officiality: string;
   referee: string;
   sizeStandard: string;
   isRelay: boolean;
@@ -30,9 +30,9 @@ function withTrackType(form: TrackFormData, trackType: string): TrackFormData {
   return {
     ...form,
     trackType,
-    competitionType: NON_OFFICIAL_TRACK_TYPES.has(trackType)
+    officiality: NON_OFFICIAL_TRACK_TYPES.has(trackType)
       ? "mitteametlik"
-      : form.competitionType,
+      : form.officiality,
     isRelay: TEAM_TRACK_TYPES.has(trackType) ? form.isRelay : false,
   };
 }
@@ -53,7 +53,7 @@ export function TrackForm({
     letter: "A",
     trackType: "A1",
     size: "S",
-    competitionType: "ametlik",
+    officiality: "ametlik",
     referee: "",
     sizeStandard: "EST",
     isRelay: false,
@@ -90,7 +90,7 @@ export function TrackForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Tüüp *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Võistlusklass *</label>
           <select
             value={form.trackType}
             onChange={(e) => setForm(withTrackType(form, e.target.value))}
@@ -100,7 +100,7 @@ export function TrackForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Suurus *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Suurusrühm *</label>
           <select
             value={form.size}
             onChange={(e) => setForm({ ...form, size: e.target.value })}
@@ -110,10 +110,10 @@ export function TrackForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Ametlikkus *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Võistlustüüp *</label>
           <select
-            value={form.competitionType}
-            onChange={(e) => setForm({ ...form, competitionType: e.target.value })}
+            value={form.officiality}
+            onChange={(e) => setForm({ ...form, officiality: e.target.value })}
             disabled={NON_OFFICIAL_TRACK_TYPES.has(form.trackType)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
           >

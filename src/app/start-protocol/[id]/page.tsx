@@ -24,7 +24,7 @@ interface Track {
   letter: string;
   trackType: string;
   size: string;
-  competitionType: string;
+  officiality: string;
   competitionDate: string;
 }
 
@@ -243,7 +243,7 @@ export default function PublicStartProtocolPage({
                               {track.size}
                             </span>
                             <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">
-                              {track.competitionType}
+                              {track.officiality}
                             </span>
                             <span className="text-xs text-gray-400 ml-auto">
                               {trackEntries.length} võistlejat
@@ -365,7 +365,7 @@ function exportProtocolToPDF(
     for (const trackKey of sortedTrackKeys) {
       const trackEntries = tracksForDate[trackKey].sort((a, b) => a.sortOrder - b.sortOrder);
       const track = trackEntries[0].competitionTrack;
-      html += `<h4>${track.letter} - ${track.trackType} | ${track.size} | ${track.competitionType}</h4>`;
+      html += `<h4>${track.letter} - ${track.trackType} | ${track.size} | ${track.officiality}</h4>`;
       html += `<table><thead><tr><th>Nr</th><th>Koerajuht</th><th>Klubi</th><th>Koer</th><th>Tõug</th><th>Suurus</th><th>Klass</th></tr></thead><tbody>`;
       for (const e of trackEntries) {
         html += `<tr>

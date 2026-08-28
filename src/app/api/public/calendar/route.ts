@@ -71,7 +71,7 @@ export async function GET(req: Request) {
         organizerName: true,
         clubName: true,
         location: true,
-        competitionType: true,
+        competitionOfficiality: true,
         competitionClasses: true,
         referee: true,
         info: true,
@@ -92,7 +92,9 @@ export async function GET(req: Request) {
       end: b.endDate.toISOString(),
       referee: toRefereeArray(b.referee),
       competitionClasses: b.competitionClasses || "",
-      competitionType: b.competitionType,
+      // The WordPress calendar reads this key, so it keeps the old name
+      // even though the field is now `competitionOfficiality`.
+      competitionType: b.competitionOfficiality,
       description: b.info || "",
       location: b.location,
       regStatus: b.regStatus,

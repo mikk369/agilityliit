@@ -10,7 +10,7 @@ export type BookingEditForm = {
   email: string;
   phone: string;
   location: string;
-  competitionType: string;
+  competitionOfficiality: string;
   info: string;
   competitionClasses: string;
 };
@@ -22,7 +22,7 @@ function toEditForm(booking: Booking): BookingEditForm {
     email: booking.email,
     phone: booking.phone,
     location: booking.location,
-    competitionType: booking.competitionType,
+    competitionOfficiality: booking.competitionOfficiality,
     info: booking.info || "",
     competitionClasses: booking.competitionClasses || "",
   };
@@ -77,7 +77,7 @@ export function InfoTab({
               <FormField label="E-post" value={editForm.email} onChange={(v) => setEditForm({ ...editForm, email: v })} type="email" required />
               <FormField label="Telefon" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} required />
               <FormField label="Asukoht" value={editForm.location} onChange={(v) => setEditForm({ ...editForm, location: v })} required />
-              <FormField label="Võistluse tüüp" value={editForm.competitionType} onChange={(v) => setEditForm({ ...editForm, competitionType: v })} required />
+              <FormField label="Võistlustüüp" value={editForm.competitionOfficiality} onChange={(v) => setEditForm({ ...editForm, competitionOfficiality: v })} required />
             </div>
             <FormField label="Võistlusklassid" value={editForm.competitionClasses} onChange={(v) => setEditForm({ ...editForm, competitionClasses: v })} />
             <div>
@@ -105,7 +105,7 @@ export function InfoTab({
             <InfoRow label="E-post" value={booking.email} />
             <InfoRow label="Telefon" value={booking.phone} />
             <InfoRow label="Asukoht" value={booking.location} />
-            <InfoRow label="Võistluse tüüp" value={booking.competitionType} />
+            <InfoRow label="Võistlustüüp" value={booking.competitionOfficiality} />
             <InfoRow label="Staatus" value={booking.status} />
             <InfoRow label="Kohtunikud" value={(booking.referee as string[])?.join(", ") || "—"} />
             {booking.competitionClasses && (

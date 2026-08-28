@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { COMPETITION_TYPES } from "@/lib/constants";
+import { COMPETITION_OFFICIALITY } from "@/lib/constants";
 import { MessageBanner } from "@/components/ui/MessageBanner";
 
 export default function NewCompetitionPage() {
@@ -20,7 +20,7 @@ export default function NewCompetitionPage() {
     email: "",
     phone: "",
     location: "",
-    competitionType: COMPETITION_TYPES[0],
+    competitionOfficiality: COMPETITION_OFFICIALITY[0],
     startDate: "",
     endDate: "",
     qualTime: "",
@@ -109,13 +109,13 @@ export default function NewCompetitionPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Võistluse tüüp *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Võistlustüüp *</label>
               <select
-                value={form.competitionType}
-                onChange={(e) => update("competitionType", e.target.value)}
+                value={form.competitionOfficiality}
+                onChange={(e) => update("competitionOfficiality", e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                {COMPETITION_TYPES.map((t) => (
+                {COMPETITION_OFFICIALITY.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>

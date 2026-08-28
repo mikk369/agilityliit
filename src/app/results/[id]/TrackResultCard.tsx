@@ -36,7 +36,7 @@ export function TrackResultCard({ data }: { data: TrackData }) {
             {track.size}
           </span>
           <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">
-            {track.competitionType}
+            {track.officiality}
           </span>
           {track.isRelay && (
             <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs">

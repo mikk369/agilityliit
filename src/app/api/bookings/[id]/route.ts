@@ -83,7 +83,7 @@ export async function PATCH(
     if (data.info !== undefined) updateData.info = data.info || null;
     if (data.competitionClasses !== undefined)
       updateData.competitionClasses = data.competitionClasses || null;
-    if (data.competitionType) updateData.competitionType = data.competitionType;
+    if (data.competitionOfficiality) updateData.competitionOfficiality = data.competitionOfficiality;
     // PENDING -> BOOKED is the admin's approval, not something the owner
     // grants themselves — see PATCH /api/bookings/[id]/status.
     if (data.status && isAdmin) updateData.status = data.status;

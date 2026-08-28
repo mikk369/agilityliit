@@ -116,28 +116,28 @@ model Dog {
 // =========================================================================
 
 model Booking {
-  id                 Int       @id @default(autoincrement())
-  userId             Int       @map("user_id")
-  startDate          DateTime  @map("start_date")
-  endDate            DateTime  @map("end_date")
-  qualTime           String?   @map("qual_time")
-  organizerName      String    @map("organizer_name")
-  clubName           String    @map("club_name")
-  email              String
-  phone              String
-  location           String
-  referee            Json?
-  info               String?   @db.Text
-  competitionClasses String?   @map("competition_classes") @db.Text
-  competitionType    String    @map("competition_type")
-  status             String    @default("PENDING")
-  regStatus          String?   @map("reg_status")
-  regCloseDate       DateTime? @map("reg_close_date")
-  protocolPublished  Int       @default(0) @map("protocol_published")
-  teamsLocked        Int       @default(0) @map("teams_locked")
-  teamsPublished     Int       @default(0) @map("teams_published")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
+  id                     Int       @id @default(autoincrement())
+  userId                 Int       @map("user_id")
+  startDate              DateTime  @map("start_date")
+  endDate                DateTime  @map("end_date")
+  qualTime               String?   @map("qual_time")
+  organizerName          String    @map("organizer_name")
+  clubName               String    @map("club_name")
+  email                  String
+  phone                  String
+  location               String
+  referee                Json?
+  info                   String?   @db.Text
+  competitionClasses     String?   @map("competition_classes") @db.Text
+  competitionOfficiality String    @map("competition_type")
+  status                 String    @default("PENDING")
+  regStatus              String?   @map("reg_status")
+  regCloseDate           DateTime? @map("reg_close_date")
+  protocolPublished      Int       @default(0) @map("protocol_published")
+  teamsLocked            Int       @default(0) @map("teams_locked")
+  teamsPublished         Int       @default(0) @map("teams_published")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
 
   user              User               @relation(fields: [userId], references: [id])
   competitionInfo   CompetitionInfo?
@@ -181,7 +181,7 @@ model CompetitionTrack {
   letter          String
   trackType       String   @map("track_type")
   size            String
-  competitionType String   @map("competition_type")
+  officiality     String   @map("competition_type")
   referee         String?
   sizeStandard    String?  @map("size_standard")
   sortOrder       Int      @default(0) @map("sort_order")

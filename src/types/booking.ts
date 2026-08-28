@@ -8,7 +8,7 @@ export interface CompetitionTrack {
   letter: string;
   trackType: string;
   size: string;
-  competitionType: string;
+  officiality: string;
   referee: string | null;
   sizeStandard: string | null;
   sortOrder: number;
@@ -36,7 +36,7 @@ export interface Booking {
   referee: string[];
   info: string | null;
   competitionClasses: string | null;
-  competitionType: string;
+  competitionOfficiality: string;
   status: string;
   regStatus: string | null;
   regCloseDate: string | null;
@@ -47,7 +47,7 @@ export interface Booking {
 /** Booking list item (competitions page) */
 export type BookingListItem = Pick<
   Booking,
-  "id" | "startDate" | "endDate" | "organizerName" | "clubName" | "location" | "competitionType" | "status" | "regStatus" | "regCloseDate"
+  "id" | "startDate" | "endDate" | "organizerName" | "clubName" | "location" | "competitionOfficiality" | "status" | "regStatus" | "regCloseDate"
 >;
 
 /**
@@ -94,7 +94,7 @@ export interface PublicCompetitionListItem {
   organizerName: string;
   clubName: string;
   location: string;
-  competitionType: string;
+  competitionOfficiality: string;
   status: string;
   regStatus: string | null;
   regCloseDate: string | null;
@@ -111,7 +111,7 @@ export interface PublicCompetitionDetail {
   email: string;
   phone: string;
   location: string;
-  competitionType: string;
+  competitionOfficiality: string;
   competitionClasses: string | null;
   referee: string[];
   info: string | null;
@@ -125,6 +125,6 @@ export interface PublicCompetitionDetail {
   } | null;
   competitionTracks: Pick<
     CompetitionTrack,
-    "id" | "competitionDate" | "letter" | "trackType" | "size" | "competitionType" | "referee" | "isRelay"
+    "id" | "competitionDate" | "letter" | "trackType" | "size" | "officiality" | "referee" | "isRelay"
   >[];
 }

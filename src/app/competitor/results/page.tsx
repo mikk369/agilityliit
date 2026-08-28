@@ -83,7 +83,7 @@ export default function ResultsPage() {
                         <td className="py-3 px-4">
                           <span className="font-medium">{r.trackLetter}</span>
                           <span className="text-gray-500 ml-1">
-                            ({r.trackType}, {r.competitionType})
+                            ({r.trackType}, {r.officiality})
                           </span>
                         </td>
                         <td className="py-3 px-4">

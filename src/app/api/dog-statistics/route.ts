@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
             referee: true,
             size: true,
             booking: {
-              select: { clubName: true, competitionType: true },
+              select: { clubName: true, competitionOfficiality: true },
             },
           },
         },
@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
 
       const resultVal = row.hasQualification ? row.competitionTrack.letter : "";
 
-      const compType = row.competitionTrack.booking.competitionType?.toLowerCase().includes("eksam")
+      const compType = row.competitionTrack.booking.competitionOfficiality?.toLowerCase().includes("eksam")
         ? "eksam"
         : "võistlus";
 

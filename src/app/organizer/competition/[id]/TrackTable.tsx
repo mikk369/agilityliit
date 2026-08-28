@@ -39,9 +39,9 @@ export function TrackTable({
                 <thead>
                   <tr className="border-b border-gray-100 text-left">
                     <th className="px-4 py-2 font-medium text-gray-600">Täht</th>
-                    <th className="px-4 py-2 font-medium text-gray-600">Tüüp</th>
-                    <th className="px-4 py-2 font-medium text-gray-600">Suurus</th>
-                    <th className="px-4 py-2 font-medium text-gray-600">Klass</th>
+                    <th className="px-4 py-2 font-medium text-gray-600">Võistlusklass</th>
+                    <th className="px-4 py-2 font-medium text-gray-600">Suurusrühm</th>
+                    <th className="px-4 py-2 font-medium text-gray-600">Võistlustüüp</th>
                     <th className="px-4 py-2 font-medium text-gray-600">Kohtunik</th>
                     <th className="px-4 py-2 font-medium text-gray-600">Standard</th>
                     <th className="px-4 py-2 font-medium text-gray-600"></th>
@@ -55,7 +55,7 @@ export function TrackTable({
                       <td className="px-4 py-2">
                         <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">{track.size}</span>
                       </td>
-                      <td className="px-4 py-2">{track.competitionType}</td>
+                      <td className="px-4 py-2">{track.officiality}</td>
                       <td className="px-4 py-2">{track.referee || "—"}</td>
                       <td className="px-4 py-2">{track.sizeStandard || "—"}</td>
                       <td className="px-4 py-2">

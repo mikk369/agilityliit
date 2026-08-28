@@ -32,7 +32,7 @@ export async function GET(req: Request) {
         organizerName: true,
         clubName: true,
         location: true,
-        competitionType: true,
+        competitionOfficiality: true,
         status: true,
         regStatus: true,
         regCloseDate: true,
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
         referee: data.referee || [],
         info: data.info || null,
         competitionClasses: data.competitionClasses || null,
-        competitionType: data.competitionType,
+        competitionOfficiality: data.competitionOfficiality,
         // Only an admin approves a date reservation or files a club event.
         // An organizer's own booking always starts as PENDING.
         status: session.user.role === "ADMIN" ? data.status || "PENDING" : "PENDING",

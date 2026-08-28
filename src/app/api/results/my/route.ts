@@ -36,7 +36,7 @@ export async function GET() {
             id: true,
             letter: true,
             trackType: true,
-            competitionType: true,
+            officiality: true,
             competitionDate: true,
             booking: {
               select: { id: true, organizerName: true, startDate: true },
@@ -56,7 +56,7 @@ export async function GET() {
       bookingDate: r.competitionTrack.booking.startDate,
       trackLetter: r.competitionTrack.letter,
       trackType: r.competitionTrack.trackType,
-      competitionType: r.competitionTrack.competitionType,
+      officiality: r.competitionTrack.officiality,
       competitionDate: r.competitionTrack.competitionDate,
       timeSeconds: r.timeSeconds ? Number(r.timeSeconds) : null,
       faults: r.faults,

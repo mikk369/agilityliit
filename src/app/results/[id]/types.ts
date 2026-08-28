@@ -51,7 +51,7 @@ export interface ResultsBooking {
   location: string;
   startDate: string;
   endDate: string;
-  competitionType: string;
+  competitionOfficiality: string;
   protocolPublished: number;
 }
 

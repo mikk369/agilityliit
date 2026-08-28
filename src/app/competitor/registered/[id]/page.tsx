@@ -15,7 +15,7 @@ interface Entry {
     endDate: string;
     organizerName: string;
     location: string;
-    competitionType: string;
+    competitionOfficiality: string;
   };
   dog: { id: number; nickName: string };
   competitorTracks: {
@@ -23,7 +23,7 @@ interface Entry {
       letter: string;
       trackType: string;
       size: string;
-      competitionType: string;
+      officiality: string;
       competitionDate: string;
     };
   }[];
@@ -121,7 +121,8 @@ export default function RegisteredPage({
                         formatDate(ct.competitionTrack.competitionDate, locale),
                         ct.competitionTrack.letter,
                         ct.competitionTrack.trackType,
-                        ct.competitionTrack.size
+                        ct.competitionTrack.size,
+                        ct.competitionTrack.officiality
                       )}
                     </li>
                   ))}

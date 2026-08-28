@@ -206,9 +206,9 @@ const et = {
   compDetailInfo: "Võistluse info",
   compDetailTracks: "Rajad",
   compDetailTrack: "Rada",
-  compDetailType: "Tüüp",
-  compDetailSize: "Suurus",
-  compDetailClass: "Klass",
+  compDetailCompClass: "Võistlusklass",
+  compDetailSizeGroup: "Suurusrühm",
+  compDetailOfficiality: "Võistlustüüp",
   compDetailJudge: "Kohtunik",
   compDetailClub: "Klubi",
   compDetailEmail: "E-post",
@@ -244,8 +244,8 @@ const et = {
   regCompetition: "Võistlus",
   regDog: "Koer",
   regSelectedTracks: "Valitud rajad",
-  regTrack: (date: string, letter: string, type: string, cls: string) =>
-    `${date} — Rada ${letter} (${type}, ${cls})`,
+  regTrack: (date: string, letter: string, trackType: string, size: string, officiality: string) =>
+    `${date} — Rada ${letter} (${trackType} / ${size} / ${officiality})`,
   regConfirm: "Kinnita registreerimine",
   regSubmitting: "Registreerimine...",
   regFailed: "Registreerimine ebaõnnestus",

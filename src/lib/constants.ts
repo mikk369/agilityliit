@@ -1,9 +1,9 @@
 // =========================================================================
-// TRACK SIZES
+// SIZE GROUPS (suurusrühm)
 // =========================================================================
 
 /**
- * The size a track is run for, stored in `competition_tracks.size`.
+ * The size group a track is run for, stored in `competition_tracks.size`.
  *
  * A dog's own size is NOT one of these: dogs carry the Estonian class label
  * ("Midi(M)"), see DOG_SIZE_CLASSES in `dog-sizes.ts`.
@@ -27,16 +27,17 @@ export const COMPETITION_CLASSES = ["A0", "A1", "A2", "A3"] as const;
 export const JUMP_CLASSES = ["H0", "H1", "H2", "H3"] as const;
 
 // =========================================================================
-// TRACK TYPES
+// TRACK TYPES / võistlusklass (`competition_tracks.track_type`)
 // =========================================================================
 
 /**
- * A track's class, stored in `competition_tracks.track_type`.
+ * The class a track is run for, read as `trackType` and labelled
+ * "Võistlusklass": a dog may enter it once it has reached that class.
  *
- * Shared table: the same values are written by the WordPress app, so this list
- * mirrors TRACK_TYPE_OPTIONS in organizerPage/src/constants/trackTypes.ts.
+ * Shared convention: the same values are written by the WordPress app, so this
+ * list mirrors TRACK_TYPE_OPTIONS in organizerPage/src/constants/trackTypes.ts.
  * The neighbouring `competition_type` column holds the officiality
- * (ametlik / mitteametlik), not the class.
+ * (ametlik / mitteametlik) and is read as `officiality`, NOT as a track type.
  */
 export const TRACK_TYPES = [
   "H0",
@@ -56,7 +57,7 @@ export const TRACK_TYPES = [
 ] as const;
 export type TrackType = (typeof TRACK_TYPES)[number];
 
-/** Track classes that can never be official — the organizer form forces these. */
+/** Track types that can never be official — the organizer form forces these. */
 export const NON_OFFICIAL_TRACK_TYPES = new Set([
   "A0",
   "H0",
@@ -65,13 +66,21 @@ export const NON_OFFICIAL_TRACK_TYPES = new Set([
   "Seenior H",
 ]);
 
-/** Team classes; only these may be run as a relay. */
+/** Team track types; only these may be run as a relay. */
 export const TEAM_TRACK_TYPES = new Set(["Open Team A", "Open Team H"]);
 
 // =========================================================================
-// TRACK OFFICIALITY (`competition_tracks.competition_type`)
+// TRACK OFFICIALITY / ametlikkus (`competition_tracks.competition_type`)
 // =========================================================================
 
+/**
+ * Whether the track counts officially — read as `officiality`.
+ *
+ * The UI labels this "Võistlustüüp", the same words the booking form uses for
+ * its own field (COMPETITION_OFFICIALITY below) — two different fields, one
+ * label, so do not go by the label when reading a track: this one is ametlik /
+ * mitteametlik, the booking one is CACIAG, Rahvuslik võistlus, ...
+ */
 export const TRACK_OFFICIALITY = ["ametlik", "mitteametlik"] as const;
 export type TrackOfficiality = (typeof TRACK_OFFICIALITY)[number];
 
@@ -82,14 +91,24 @@ export type TrackOfficiality = (typeof TRACK_OFFICIALITY)[number];
 export const TRACK_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 
 // =========================================================================
-// COMPETITION TYPES
+// COMPETITION KINDS (võistlustüüp)
 // =========================================================================
 
-export const COMPETITION_TYPES = [
-  "Ametlik võistlus",
+/**
+ * What kind of competition a booking is (võistlustüüp), stored in
+ * `bookings.competition_type` and read as `competitionOfficiality`. Mirrors the list in
+ * organizerPage/src/registerNewCompetition/RegisterBookings.tsx so bookings
+ * imported from the WordPress app carry values this app also offers.
+ *
+ * A club event is NOT one of these - that is the booking status CLUBEVENT.
+ */
+export const COMPETITION_OFFICIALITY = [
+  "EKL eesti edukamate sportkoerte ja koerajuhtide võistlus",
+  "Tõuühingu meistrivõistlus",
+  "Klubimeistrivõistlus",
+  "Rahvuslik võistlus",
+  "CACIAG",
   "Mitteametlik võistlus",
-  "Klubiüritus",
-  "Treening",
 ] as const;
 
 // =========================================================================

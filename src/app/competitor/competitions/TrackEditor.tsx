@@ -128,7 +128,7 @@ export function TrackEditor({
                         {track.size}
                       </span>
                       <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
-                        {track.competitionType}
+                        {track.officiality}
                       </span>
                     </div>
                   </label>

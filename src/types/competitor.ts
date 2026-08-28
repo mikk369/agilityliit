@@ -34,7 +34,7 @@ export interface CompetitorEntry {
   competitorTracks: {
     competitionTrack: Pick<
       CompetitionTrack,
-      "id" | "competitionDate" | "letter" | "trackType" | "size" | "competitionType"
+      "id" | "competitionDate" | "letter" | "trackType" | "size" | "officiality"
     >;
   }[];
 }
@@ -61,7 +61,7 @@ export interface DogResult {
   bookingDate: string;
   trackLetter: string;
   trackType: string;
-  competitionType: string;
+  officiality: string;
   competitionDate: string;
   timeSeconds: number | null;
   faults: number;
@@ -82,7 +82,7 @@ export interface MyRegistration {
     organizerName: string;
     clubName: string;
     location: string;
-    competitionType: string;
+    competitionOfficiality: string;
     status: string;
     /** Judges of the competition; stored as a JSON array. */
     referee: string[] | null;
@@ -103,7 +103,7 @@ export interface MyRegistration {
       letter: string;
       trackType: string;
       size: string;
-      competitionType: string;
+      officiality: string;
       competitionDate: string;
     };
   }[];
