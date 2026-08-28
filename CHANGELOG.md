@@ -1,5 +1,21 @@
 # Changelog
 
+## The renamed columns are live (2026-08-28)
+
+`scripts/migration-2026-08-28.sql` part 2 has been run: `bookings.competition_type` is now `competition_officiality` and `competition_tracks.competition_type` is now `officiality`. The schema's `@map`s still pointed at the old names, so every booking and track query hit a column that no longer existed and the routes answered `{"error":"Serveri viga"}`.
+
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | The two `@map`s point at the new columns |
+| `prisma/migrations/0_init/` | New — baseline describing the database as it now stands, generated from the schema |
+| `prisma/migrations/README.md` | New — how to finish the baseline (`migrate resolve --applied 0_init`) and how to write a rename migration without losing the column |
+
+The baseline is only files. `npx prisma migrate resolve --applied 0_init` still has to run against each database, and needs a reachable `DATABASE_URL`; until it does, `prisma migrate deploy` on that database would try to create tables that already exist. The README carries both commands and the drift check to run first.
+
+Verified with `npx tsc --noEmit` and `npx next build`. **Unverified:** against a running database — `DATABASE_URL` (localhost:3306) refuses connections from here, so the fix is confirmed by the column names alone, not by a request that succeeded.
+
+---
+
 ## `competition_type` meant two different things in two tables (2026-08-28)
 
 `bookings.competition_type` is the võistlustüüp — CACIAG, Rahvuslik võistlus, Tõuühingu meistrivõistlus. `competition_tracks.competition_type` is ametlik / mitteametlik. One name, two unrelated fields, which is what put the class and the officiality in the wrong columns once already (see the 2026-08-27 entry below). They are now read under names that say which is which: `officiality` on a track, `competitionOfficiality` on a booking. `competition_tracks.track_type` is unchanged — it holds the class (A1 / H1 / Open A / tunnelid) and was already right.

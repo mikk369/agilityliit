@@ -129,7 +129,7 @@ model Booking {
   referee                Json?
   info                   String?   @db.Text
   competitionClasses     String?   @map("competition_classes") @db.Text
-  competitionOfficiality String    @map("competition_type")
+  competitionOfficiality String    @map("competition_officiality")
   status                 String    @default("PENDING")
   regStatus              String?   @map("reg_status")
   regCloseDate           DateTime? @map("reg_close_date")
@@ -181,7 +181,7 @@ model CompetitionTrack {
   letter          String
   trackType       String   @map("track_type")
   size            String
-  officiality     String   @map("competition_type")
+  officiality     String   @map("officiality")
   referee         String?
   sizeStandard    String?  @map("size_standard")
   sortOrder       Int      @default(0) @map("sort_order")
