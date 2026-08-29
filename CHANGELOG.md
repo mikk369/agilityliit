@@ -1,5 +1,28 @@
 # Changelog
 
+## Vaccination deadlines now greet the competitor at login (2026-08-29)
+
+A competitor had to open Minu koerad and expand a dog to notice that a vaccination had run out — nothing told them otherwise, and an expired vaccination is caught at the competition instead. Logging in to the competitor area now raises the same modal the production app shows: the dogs whose üldvaktsiin or marutaudivaktsiin has expired or expires within 5 days, each with its date.
+
+| File | Change |
+|------|--------|
+| `src/lib/vaccination.ts` | New — `VACCINATION_WARNING_DAYS` (5), `vaccinationStatus()` (missing / expired / expiring / valid) and `dogsNeedingVaccination()`, the one place the dates are judged |
+| `src/components/VaccinationWarningModal.tsx` | New — the modal; fetches `/api/dogs/me`, and also exports `clearVaccinationWarningSeen()` |
+| `src/app/competitor/layout.tsx` | New — mounts the modal over the competitor area, where `homePathForRole` lands a competitor after login |
+| `src/components/NavBar.tsx` | Both sign-out buttons clear the seen flag |
+| `src/app/competitor/dogs/DogCard.tsx` | Its own `isExpired` / `isSoonExpiring` replaced by `vaccinationStatus()`; the 30-day badge threshold is now the named `DOG_CARD_VACC_SOON_DAYS` |
+| `src/i18n/translations/*.ts` | `vaccWarning*` keys and a shared `close` |
+
+It fires once per browser session, keyed by user id in `sessionStorage`, so it does not reappear on every page the handler opens afterwards. `sessionStorage` outlives a logout within the same tab, so signing out clears the flag — otherwise the next person to log in on that browser would be shown nothing.
+
+The two thresholds are deliberately different. The dog card keeps colouring a vaccination yellow 30 days out; the modal interrupts, so it waits until 5 days, which is what the production wording promises.
+
+Dogs with no vaccination date at all are left out of the modal. They have no deadline to warn about, and the dogs page already prints them red as "Puudub".
+
+Verified with `npx tsc --noEmit`, `npx eslint` and `npx next build`. **Unverified:** in a browser against a logged-in competitor — `DATABASE_URL` (localhost:3306) refuses connections from here, so the modal has not been seen on screen.
+
+---
+
 ## Both migrations are applied (2026-08-29)
 
 `scripts/migration-2026-08-28.sql` has been run in full against the database.

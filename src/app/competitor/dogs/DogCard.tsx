@@ -4,6 +4,11 @@ import { useState, useEffect } from "react";
 import { formatDate } from "@/lib/utils";
 import type { Translations } from "@/i18n/translations/et";
 import type { Dog, DogMeasurementEntry, DogMeasurementHistory, ProgressionData } from "@/types";
+import { vaccinationStatus } from "@/lib/vaccination";
+
+/** How far ahead the card colours a vaccination yellow — a gentler nudge
+ * than the login warning, which fires only when expiry is imminent. */
+const DOG_CARD_VACC_SOON_DAYS = 30;
 
 export function DogCard({
   dog,
@@ -57,23 +62,17 @@ export function DogCard({
       .finally(() => setMeasurementsLoading(false));
   }, [expanded, measurementsLoaded, dog.id]);
 
-  function isExpired(date: string | null) {
-    if (!date) return true;
-    return new Date(date) < new Date();
-  }
-
-  function isSoonExpiring(date: string | null) {
-    if (!date) return false;
-    const soon = new Date();
-    soon.setDate(soon.getDate() + 30);
-    return new Date(date) < soon && !isExpired(date);
-  }
-
   function vaccineStatus(date: string | null) {
-    if (!date) return { text: t.dogsVaccMissing, className: "text-red-600" };
-    if (isExpired(date)) return { text: t.dogsVaccExpired(formatDate(date, locale)), className: "text-red-600" };
-    if (isSoonExpiring(date)) return { text: t.dogsVaccExpiringSoon(formatDate(date, locale)), className: "text-yellow-600" };
-    return { text: formatDate(date, locale), className: "text-green-600" };
+    switch (vaccinationStatus(date, DOG_CARD_VACC_SOON_DAYS)) {
+      case "missing":
+        return { text: t.dogsVaccMissing, className: "text-red-600" };
+      case "expired":
+        return { text: t.dogsVaccExpired(formatDate(date!, locale)), className: "text-red-600" };
+      case "expiring":
+        return { text: t.dogsVaccExpiringSoon(formatDate(date!, locale)), className: "text-yellow-600" };
+      default:
+        return { text: formatDate(date!, locale), className: "text-green-600" };
+    }
   }
 
   const generalVacc = vaccineStatus(dog.generalVaccinationEnd);

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useTranslation } from "@/i18n/LanguageContext";
 import LangToggle from "./LangToggle";
 import { homePathForRole, WP_SITE_URL } from "@/lib/home-path";
+import { clearVaccinationWarningSeen } from "./VaccinationWarningModal";
 
 export default function NavBar() {
   const { data: session } = useSession();
@@ -58,7 +59,10 @@ export default function NavBar() {
                     {session.user.name}
                   </span>
                   <button
-                    onClick={() => signOut({ callbackUrl: "/competitions" })}
+                    onClick={() => {
+                      clearVaccinationWarningSeen();
+                      signOut({ callbackUrl: "/competitions" });
+                    }}
                     className="text-sm px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                   >
                     {t.navLogout}
@@ -153,6 +157,7 @@ export default function NavBar() {
                   <button
                     onClick={() => {
                       setMenuOpen(false);
+                      clearVaccinationWarningSeen();
                       signOut({ callbackUrl: "/competitions" });
                     }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"

@@ -4,6 +4,7 @@ const en: Translations = {
   // Common
   save: "Save",
   cancel: "Cancel",
+  close: "Close",
   delete: "Delete",
   edit: "Edit",
   back: "Back",
@@ -130,6 +131,14 @@ const en: Translations = {
   dogsVaccMissing: "Missing",
   dogsVaccExpired: (date: string) => `Expired (${date})`,
   dogsVaccExpiringSoon: (date: string) => `Expiring soon (${date})`,
+
+  // Vaccination warning on login
+  vaccWarningTitle: "Vaccination expiry warning",
+  vaccWarningIntro: (days: number) =>
+    `The vaccinations of the following dogs have expired or expire within ${days} days. Please update the details as soon as possible.`,
+  vaccWarningExpiredOn: (date: string) => `expired ${date}`,
+  vaccWarningExpiresOn: (date: string) => `expires ${date}`,
+  vaccWarningGoToDogs: "View dogs",
 
   // Dog measurements
   measurementsTitle: "Measurement results",

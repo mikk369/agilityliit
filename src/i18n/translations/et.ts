@@ -2,6 +2,7 @@ const et = {
   // Common
   save: "Salvesta",
   cancel: "Tühista",
+  close: "Sulge",
   delete: "Kustuta",
   edit: "Muuda",
   back: "Tagasi",
@@ -128,6 +129,14 @@ const et = {
   dogsVaccMissing: "Puudub",
   dogsVaccExpired: (date: string) => `Aegunud (${date})`,
   dogsVaccExpiringSoon: (date: string) => `Aegub peagi (${date})`,
+
+  // Vaccination warning on login
+  vaccWarningTitle: "Vaktsineerimise tähtaja hoiatus",
+  vaccWarningIntro: (days: number) =>
+    `Järgmiste koerte vaktsineerimine on aegunud või aegub ${days} päeva jooksul. Palun uuenda andmed esimesel võimalusel.`,
+  vaccWarningExpiredOn: (date: string) => `aegus ${date}`,
+  vaccWarningExpiresOn: (date: string) => `aegub ${date}`,
+  vaccWarningGoToDogs: "Vaata koeri",
 
   // Dog measurements
   measurementsTitle: "Mõõtmistulemused",
