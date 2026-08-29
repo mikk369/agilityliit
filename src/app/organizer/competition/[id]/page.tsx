@@ -11,6 +11,7 @@ import { InfoTab, type BookingEditForm } from "./InfoTab";
 import { TrackForm, type TrackFormData } from "./TrackForm";
 import { TrackTable } from "./TrackTable";
 import { SettingsTab } from "./SettingsTab";
+import { MaxPerDayPanel } from "./MaxPerDayPanel";
 
 const SUBPAGES = [
   { segment: "competitors", label: "Võistlejad" },
@@ -282,13 +283,16 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
       )}
 
       {activeTab === "settings" && (
-        <SettingsTab
-          initialRegStatus={booking.regStatus || "reg_open"}
-          initialRegCloseDate={booking.regCloseDate ? booking.regCloseDate.split("T")[0] : ""}
-          bookingStatus={booking.status}
-          onSave={handleSaveRegSettings}
-          onDelete={handleDeleteCompetition}
-        />
+        <div className="space-y-6">
+          <MaxPerDayPanel bookingId={id} onMessage={setMessage} />
+          <SettingsTab
+            initialRegStatus={booking.regStatus || "reg_open"}
+            initialRegCloseDate={booking.regCloseDate ? booking.regCloseDate.split("T")[0] : ""}
+            bookingStatus={booking.status}
+            onSave={handleSaveRegSettings}
+            onDelete={handleDeleteCompetition}
+          />
+        </div>
       )}
     </div>
   );

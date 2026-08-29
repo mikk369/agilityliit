@@ -3,6 +3,12 @@ import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { competitorSchema } from "@/lib/validations";
 import { isRegistrationOpen } from "@/lib/registration";
+import {
+  countRegisteredPerDay,
+  dayFullError,
+  readMaxPerDay,
+  toDateKey,
+} from "@/lib/capacity";
 
 export async function POST(req: Request) {
   try {
@@ -33,6 +39,9 @@ export async function POST(req: Request) {
     // Check booking exists and registration is open
     const booking = await prisma.booking.findUnique({
       where: { id: data.bookingId },
+      include: {
+        competitionInfo: { select: { maxCompetitorsPerDay: true } },
+      },
     });
     if (!booking) {
       return NextResponse.json(
@@ -72,6 +81,32 @@ export async function POST(req: Request) {
         { error: "See koer on juba sellele võistlusele registreeritud" },
         { status: 409 }
       );
+    }
+
+    // The organizer's per-day cap. Checked here because this is the only place
+    // an entry is created — the entry form greys out a full day, but a stale
+    // page or a direct call would otherwise walk straight past it.
+    const maxPerDay = readMaxPerDay(booking.competitionInfo?.maxCompetitorsPerDay);
+    if (Object.keys(maxPerDay).length > 0 && data.trackIds?.length) {
+      const tracks = await prisma.competitionTrack.findMany({
+        where: { id: { in: data.trackIds }, bookingId: data.bookingId },
+        select: { competitionDate: true },
+      });
+
+      // The day a track belongs to, not the single date the form posts: an
+      // entry spanning two days takes a spot on each of them.
+      const days = new Set(tracks.map((t) => toDateKey(t.competitionDate)));
+      const registeredPerDay = await countRegisteredPerDay(data.bookingId);
+
+      for (const day of days) {
+        const max = maxPerDay[day];
+        if (max !== undefined && (registeredPerDay[day] ?? 0) >= max) {
+          return NextResponse.json(
+            { error: dayFullError(day, max) },
+            { status: 409 }
+          );
+        }
+      }
     }
 
     // Create competitor and optional track registrations

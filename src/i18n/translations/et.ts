@@ -242,6 +242,10 @@ const et = {
   regSelectDog: "Vali koer",
   regNoDogs: "Sul pole ühtegi koera lisatud.",
   regAddDog: "Lisa koer",
+  regSpotsFilled: (registered: number, max: number) =>
+    `${registered}/${max} kohta täidetud`,
+  regSpotsLeft: (left: number) => `vabu kohti: ${left}`,
+  regDayFull: "Kohad täis — sellele päevale ei saa enam registreeruda.",
   regVaccInvalid: "Vaktsineerimise kehtivus ei kata võistluse kuupäevi",
   regSizeStandard: "Suuruse standard",
   regNeedsMeasurement: "Vajab mõõtmist",

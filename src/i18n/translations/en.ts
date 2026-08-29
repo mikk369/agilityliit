@@ -241,6 +241,10 @@ const en: Translations = {
   regSelectDog: "Select dog",
   regNoDogs: "You haven't added any dogs.",
   regAddDog: "Add dog",
+  regSpotsFilled: (registered: number, max: number) =>
+    `${registered}/${max} spots filled`,
+  regSpotsLeft: (left: number) => `spots left: ${left}`,
+  regDayFull: "Full — no more entries can be taken for this day.",
   regVaccInvalid: "Vaccination validity does not cover the competition dates",
   regSizeStandard: "Size standard",
   regNeedsMeasurement: "Needs measurement",

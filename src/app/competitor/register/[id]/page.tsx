@@ -46,19 +46,26 @@ export default function RegisterPage({
   const [remarks, setRemarks] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  // The organizer's per-day start limit, and how much of it is taken.
+  const [capacity, setCapacity] = useState<{
+    maxPerDay: Record<string, number>;
+    registeredPerDay: Record<string, number>;
+  } | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const [bookingRes, dogsRes, handlerRes] = await Promise.all([
+        const [bookingRes, dogsRes, handlerRes, capacityRes] = await Promise.all([
           fetch(`/api/bookings/${bookingId}`),
           fetch("/api/dogs/me"),
           fetch("/api/handlers/me"),
+          fetch(`/api/competitions/${bookingId}/capacity`),
         ]);
 
         if (bookingRes.ok) setBooking(await bookingRes.json());
         if (dogsRes.ok) setDogs(await dogsRes.json());
         if (handlerRes.status === 404) setHasHandler(false);
+        if (capacityRes.ok) setCapacity(await capacityRes.json());
       } catch {
         setMessage({ type: "error", text: t.loadFailed });
       } finally {
@@ -82,8 +89,36 @@ export default function RegisterPage({
     return generalOk && rabiesOk;
   }
 
+  /**
+   * How full a competition day is. A day with no limit is never full — the
+   * organizer sets the limit per day, not for the whole competition.
+   */
+  function dayCapacity(date: string) {
+    const max = capacity?.maxPerDay[date];
+    if (!max) return null;
+    const registered = capacity?.registeredPerDay[date] ?? 0;
+    return {
+      max,
+      registered,
+      isFull: registered >= max,
+      left: Math.max(0, max - registered),
+    };
+  }
+
   async function handleSubmit() {
     if (!selectedDogId || selectedTrackIds.length === 0) return;
+
+    // A day may have filled up while this form was open. Dropping those tracks
+    // here keeps the entry from being refused wholesale by the API.
+    const trackIds = selectedTrackIds.filter((tid) => {
+      const track = booking?.competitionTracks.find((t) => t.id === tid);
+      return track ? !dayCapacity(track.competitionDate.split("T")[0])?.isFull : false;
+    });
+    if (trackIds.length === 0) {
+      setMessage({ type: "error", text: t.regDayFull });
+      return;
+    }
+
     setSubmitting(true);
     setMessage(null);
 
@@ -94,7 +129,7 @@ export default function RegisterPage({
         body: JSON.stringify({
           bookingId,
           dogId: selectedDogId,
-          trackIds: selectedTrackIds,
+          trackIds,
           sizeStandard,
           needsMeasurement,
           needsCompetitionBook,
@@ -170,6 +205,16 @@ export default function RegisterPage({
     },
     {} as Record<string, CompetitionTrack[]>
   );
+
+  // A track on a full day cannot be entered, so a selection must not survive
+  // one either: POST /api/competitors refuses the whole entry, and the entrant
+  // would only see an error at the last step.
+  const blockedTrackIds = new Set(
+    Object.entries(tracksByDate)
+      .filter(([date]) => dayCapacity(date)?.isFull)
+      .flatMap(([, dayTracks]) => dayTracks.map((track) => track.id))
+  );
+  const enterableTrackIds = selectedTrackIds.filter((tid) => !blockedTrackIds.has(tid));
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -351,22 +396,40 @@ export default function RegisterPage({
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([date, tracks]) => (
               <div key={date} className="mb-4 last:mb-0">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">
-                  {formatDate(date, locale)}
-                </h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-sm font-medium text-gray-500">
+                    {formatDate(date, locale)}
+                  </h3>
+                  {(() => {
+                    const day = dayCapacity(date);
+                    if (!day) return null;
+                    return (
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${day.isFull ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"}`}>
+                        {t.regSpotsFilled(day.registered, day.max)}
+                        {!day.isFull && ` · ${t.regSpotsLeft(day.left)}`}
+                      </span>
+                    );
+                  })()}
+                </div>
+                {dayCapacity(date)?.isFull && (
+                  <p className="text-sm text-red-600 mb-2">{t.regDayFull}</p>
+                )}
                 <div className="space-y-1">
                   {tracks.map((track) => (
                     <label
                       key={track.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                        selectedTrackIds.includes(track.id)
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:bg-gray-50"
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                        blockedTrackIds.has(track.id)
+                          ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+                          : selectedTrackIds.includes(track.id)
+                            ? "border-blue-500 bg-blue-50 cursor-pointer"
+                            : "border-gray-200 hover:bg-gray-50 cursor-pointer"
                       }`}
                     >
                       <input
                         type="checkbox"
-                        checked={selectedTrackIds.includes(track.id)}
+                        disabled={blockedTrackIds.has(track.id)}
+                        checked={selectedTrackIds.includes(track.id) && !blockedTrackIds.has(track.id)}
                         onChange={(e) => {
                           if (e.target.checked) {
                             setSelectedTrackIds([...selectedTrackIds, track.id]);
@@ -428,7 +491,7 @@ export default function RegisterPage({
             </button>
             <button
               onClick={() => setStep(3)}
-              disabled={selectedTrackIds.length === 0}
+              disabled={enterableTrackIds.length === 0}
               className="px-6 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               {t.next}

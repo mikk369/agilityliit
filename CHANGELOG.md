@@ -1,5 +1,29 @@
 # Changelog
 
+## The per-day start limit is back, and this time it is enforced (2026-08-29)
+
+`max_competitors_per_day` had a column, a Zod field and a route that stored it — and no screen to set it, no count to compare it against, and no check anywhere. `POST /api/competitors` asked only whether registration was open, so a day the organizer had capped in the WordPress app kept taking entries here.
+
+| File | Change |
+|------|--------|
+| `src/lib/capacity.ts` | New — the day key, the competition's day list, the stored limits read defensively, and the per-day count of entries |
+| `src/app/api/competitions/[id]/capacity/route.ts` | New — `{ dates, maxPerDay, registeredPerDay }`, so the editor and the entry form show the numbers the API enforces |
+| `src/app/api/competitors/route.ts` | An entry onto a full day is refused with 409 |
+| `src/app/organizer/competition/[id]/MaxPerDayPanel.tsx` | New — the limit per day with `registered/max` and spots left, under Seaded |
+| `src/app/organizer/competition/[id]/page.tsx` | Renders the panel above the registration settings |
+| `src/app/competitor/register/[id]/page.tsx` | Each day carries its spots counter; a full day's tracks are disabled, and a day that fills while the form is open is dropped from the entry rather than failing it |
+| `src/i18n/translations/*.ts` | `regSpotsFilled`, `regSpotsLeft`, `regDayFull` |
+
+An entry counts once per day it has a track on, however many tracks that is — the limit is on starters per day, not on runs. Entries still PENDING count too: they are holding the spot until the organizer decides.
+
+The day a track belongs to comes from the track's own `competition_date`, not from the single `competitionDate` the entry form posts, so an entry spanning two days takes a spot on each.
+
+Saving the limits posts only `maxCompetitorsPerDay`, which the info route now treats as a partial update — the descriptions are left alone.
+
+Verified with `npx tsc --noEmit`, `npx eslint` and `npx next build`. **Unverified:** against a running database — `DATABASE_URL` (localhost:3306) refuses connections from here, so no day has actually been filled and refused.
+
+---
+
 ## Registration can no longer be "opened" behind a deadline that has passed (2026-08-29)
 
 The settings tab let the organizer set the status to Avatud while the closing date was in the past. `isRegistrationOpen()` still answered "closed", so the save reported "Registreerimise seaded salvestatud!" and no entrant could register — the organizer had no way to tell the setting had done nothing. The WordPress app refuses the same combination (`useRegistrationStatus.ts`: "Sulgemise kuupäev peab olema tulevikus").
