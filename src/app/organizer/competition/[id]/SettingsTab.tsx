@@ -1,6 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import {
+  isRegCloseDatePast,
+  REG_CLOSE_DATE_PAST_ERROR,
+} from "@/lib/registration";
+import { REG_STATUS_CLOSED } from "@/lib/constants";
 
 export function SettingsTab({
   initialRegStatus,
@@ -19,6 +24,18 @@ export function SettingsTab({
   const [regStatus, setRegStatus] = useState(initialRegStatus);
   const [regCloseDate, setRegCloseDate] = useState(initialRegCloseDate);
 
+  // The same rule the API enforces: an open registration behind a deadline
+  // that has passed takes no entries, so saving it would only look like it
+  // worked. Checked here too, to say so before the request goes out.
+  const wouldStayClosed =
+    regStatus !== REG_STATUS_CLOSED && isRegCloseDatePast(regCloseDate);
+
+  // What is stored right now, so an organizer coming back to a competition
+  // whose deadline ran out is told why entries stopped.
+  const savedButExpired =
+    initialRegStatus !== REG_STATUS_CLOSED &&
+    isRegCloseDatePast(initialRegCloseDate);
+
   // Registration cannot open before the admin confirms the date reservation —
   // isRegistrationOpen() refuses anything that is not BOOKED, so letting the
   // organizer flip regStatus here would only produce a setting with no effect.
@@ -32,6 +49,13 @@ export function SettingsTab({
           <p className="mb-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
             Võistlus ootab admini kinnitust. Registreerimist saab avada alles
             pärast seda, kui admin on kuupäevabroneeringu kinnitanud.
+          </p>
+        )}
+        {savedButExpired && !isPending && (
+          <p className="mb-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+            Sulgemise kuupäev on möödas, nii et registreerimine on suletud,
+            kuigi staatus on „Avatud”. Registreerimise uuesti avamiseks vali
+            uus sulgemise kuupäev ja salvesta.
           </p>
         )}
         <div className="space-y-4">
@@ -55,10 +79,15 @@ export function SettingsTab({
               onChange={(e) => setRegCloseDate(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+            {wouldStayClosed && (
+              <p className="mt-1 text-xs text-amber-600">
+                {REG_CLOSE_DATE_PAST_ERROR}
+              </p>
+            )}
           </div>
           <button
             onClick={() => onSave(regStatus, regCloseDate)}
-            disabled={isPending}
+            disabled={isPending || wouldStayClosed}
             className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:bg-amber-200 disabled:text-amber-700 disabled:cursor-not-allowed"
           >
             Salvesta seaded

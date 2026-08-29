@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { bookingUpdateSchema } from "@/lib/validations";
+import { isRegCloseDatePast, REG_CLOSE_DATE_PAST_ERROR } from "@/lib/registration";
+import { REG_STATUS_CLOSED } from "@/lib/constants";
 
 export async function GET(
   _req: Request,
@@ -93,6 +95,26 @@ export async function PATCH(
       updateData.regCloseDate = data.regCloseDate
         ? new Date(data.regCloseDate)
         : null;
+
+    // Registration left open behind a deadline that has already passed is not
+    // open: isRegistrationOpen() keeps refusing entries, so saving it would
+    // report success and change nothing. Only checked when the request touches
+    // these two fields, so editing an old competition's details still works.
+    if (data.regStatus !== undefined || data.regCloseDate !== undefined) {
+      const regStatus =
+        data.regStatus !== undefined ? data.regStatus || null : booking.regStatus;
+      const regCloseDate =
+        data.regCloseDate !== undefined
+          ? data.regCloseDate || null
+          : booking.regCloseDate;
+
+      if (regStatus !== REG_STATUS_CLOSED && isRegCloseDatePast(regCloseDate)) {
+        return NextResponse.json(
+          { error: REG_CLOSE_DATE_PAST_ERROR },
+          { status: 400 }
+        );
+      }
+    }
 
     const updated = await prisma.booking.update({
       where: { id: bookingId },

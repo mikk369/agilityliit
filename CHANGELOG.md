@@ -1,5 +1,21 @@
 # Changelog
 
+## Registration can no longer be "opened" behind a deadline that has passed (2026-08-29)
+
+The settings tab let the organizer set the status to Avatud while the closing date was in the past. `isRegistrationOpen()` still answered "closed", so the save reported "Registreerimise seaded salvestatud!" and no entrant could register — the organizer had no way to tell the setting had done nothing. The WordPress app refuses the same combination (`useRegistrationStatus.ts`: "Sulgemise kuupäev peab olema tulevikus").
+
+| File | Change |
+|------|--------|
+| `src/lib/registration.ts` | New `isRegCloseDatePast()` and `REG_CLOSE_DATE_PAST_ERROR`, sharing the deadline rule with `isRegistrationOpen()` — the deadline day itself still counts as open |
+| `src/app/api/bookings/[id]/route.ts` | An open status over an expired deadline is refused with 400. Only checked when the request touches `regStatus` or `regCloseDate`, so editing an old competition's other details still works |
+| `src/app/organizer/competition/[id]/SettingsTab.tsx` | Save is disabled with the reason under the date field; a competition already sitting in that state says why entries stopped and what to do |
+
+Closing registration on a past competition is untouched — the rule only applies to a status that is not `reg_closed`.
+
+Verified with `npx tsc --noEmit`, `npx eslint` and `npx next build`. **Unverified:** against a running database — `DATABASE_URL` (localhost:3306) refuses connections from here, so neither the 400 nor the disabled save has been exercised end to end.
+
+---
+
 ## Saving a description no longer blanks the sponsors and day limits (2026-08-29)
 
 `POST /api/competitions/[id]/info` wrote all four of its fields on every request. The organizer info page sends only `descriptionEst` and `descriptionEng`, so the route filled in `Prisma.JsonNull` for the other two and every save of a description wiped `sponsor_image_urls` and `max_competitors_per_day` — including the values carried over from the production database, which nothing in this app has a screen for yet.

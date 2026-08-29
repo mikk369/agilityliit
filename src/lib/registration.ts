@@ -45,6 +45,31 @@ export function isRegistrationOpen(
   return true;
 }
 
+/**
+ * Is a registration deadline already behind us?
+ *
+ * The deadline day itself still counts as open, matching `isRegistrationOpen`
+ * above — only a date before today is past. Shared by the settings form and
+ * `PATCH /api/bookings/[id]` so the form cannot offer a save the API refuses.
+ */
+export function isRegCloseDatePast(
+  date: Date | string | null | undefined,
+  now: Date = new Date()
+): boolean {
+  if (!date) return false;
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return false;
+  return endOfDay(parsed) < now;
+}
+
+/**
+ * Why opening registration behind an expired deadline is refused rather than
+ * saved: `isRegistrationOpen` would keep answering "closed", so the save would
+ * report success and change nothing an entrant could see.
+ */
+export const REG_CLOSE_DATE_PAST_ERROR =
+  "Sulgemise kuupäev on möödas. Registreerimise avamiseks vali tänane või hilisem kuupäev.";
+
 function endOfDay(date: Date): Date {
   const d = new Date(date);
   d.setHours(23, 59, 59, 999);
