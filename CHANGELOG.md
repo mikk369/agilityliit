@@ -1,5 +1,25 @@
 # Changelog
 
+## A track can be corrected instead of deleted and re-added (2026-08-29)
+
+`/api/competitions/[id]/tracks` had GET, POST and DELETE. Fixing a referee or an officiality meant deleting the track and adding it again — and a track with entries cannot be deleted at all, so after registration opened a wrong value was simply stuck. Deleting also takes its results, protocol rows and team results with it.
+
+| File | Change |
+|------|--------|
+| `src/app/api/competitions/[id]/tracks/route.ts` | New PATCH: owner or admin, every field optional, and the track is checked against the booking in the URL |
+| `src/lib/validations.ts` | `competitionTrackUpdateSchema` — the track schema partial, plus the required `trackId` |
+| `src/app/organizer/competition/[id]/TrackForm.tsx` | Takes an optional `initial`, and titles itself "Muuda rada" when it has one |
+| `src/app/organizer/competition/[id]/TrackTable.tsx` | A "Muuda" button beside "Kustuta" |
+| `src/app/organizer/competition/[id]/page.tsx` | Holds the track being edited and PATCHes it |
+
+The track is addressed by its own id, so PATCH re-checks that it belongs to the booking in the URL — owning one competition must not be enough to edit another's tracks.
+
+The edit form is keyed by track id, so opening a second track while one is open shows that track's values rather than the first one's.
+
+Verified with `npx tsc --noEmit`, `npx eslint` and `npx next build`. **Unverified:** against a running database — `DATABASE_URL` (localhost:3306) refuses connections from here, so no track has actually been edited.
+
+---
+
 ## The competition's referees can be edited again, and the forms offer them (2026-08-29)
 
 Referees could only be typed when the competition was created; afterwards the Põhiinfo tab printed them read-only, and every form that wanted a judge asked for free text. `PATCH /api/bookings/[id]` had accepted `referee` all along — there was no screen sending it. The result was the same judge spelled three ways across one competition, which the dog-statistics judge filter reads as three judges.

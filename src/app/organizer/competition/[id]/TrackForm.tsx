@@ -40,6 +40,7 @@ function withTrackType(form: TrackFormData, trackType: string): TrackFormData {
 export function TrackForm({
   defaultDate,
   referees,
+  initial,
   onSubmit,
   onCancel,
   saving,
@@ -47,20 +48,25 @@ export function TrackForm({
   defaultDate: string;
   /** The competition's referees, from its Põhiinfo tab. */
   referees: string[];
+  /** The track being edited; absent when adding a new one. */
+  initial?: TrackFormData;
   onSubmit: (data: TrackFormData) => void;
   onCancel: () => void;
   saving: boolean;
 }) {
-  const [form, setForm] = useState<TrackFormData>({
-    competitionDate: defaultDate,
-    letter: "A",
-    trackType: "A1",
-    size: "S",
-    officiality: "ametlik",
-    referee: "",
-    sizeStandard: "EST",
-    isRelay: false,
-  });
+  const editing = initial !== undefined;
+  const [form, setForm] = useState<TrackFormData>(
+    initial ?? {
+      competitionDate: defaultDate,
+      letter: "A",
+      trackType: "A1",
+      size: "S",
+      officiality: "ametlik",
+      referee: "",
+      sizeStandard: "EST",
+      isRelay: false,
+    }
+  );
 
   return (
     <form
@@ -70,7 +76,9 @@ export function TrackForm({
       }}
       className="bg-white rounded-xl border border-gray-200 p-6"
     >
-      <h3 className="text-base font-semibold text-gray-900 mb-4">Lisa uus rada</h3>
+      <h3 className="text-base font-semibold text-gray-900 mb-4">
+        {editing ? "Muuda rada" : "Lisa uus rada"}
+      </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Kuupäev *</label>
@@ -174,7 +182,7 @@ export function TrackForm({
       </div>
       <div className="flex gap-3 mt-4">
         <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
-          {saving ? "Lisamine..." : "Lisa rada"}
+          {saving ? "Salvestamine..." : editing ? "Salvesta rada" : "Lisa rada"}
         </button>
         <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
           Tühista

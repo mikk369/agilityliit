@@ -156,6 +156,16 @@ export const competitionTrackSchema = z.object({
   isRelay: z.boolean().optional(),
 });
 
+/**
+ * Editing an existing track. Everything but the id is optional, so a caller
+ * may change one field without restating the rest.
+ */
+export const competitionTrackUpdateSchema = competitionTrackSchema
+  .partial()
+  .extend({
+    trackId: z.number().int("Raja ID on kohustuslik"),
+  });
+
 export type CompetitionTrackInput = z.infer<typeof competitionTrackSchema>;
 
 // =========================================================================

@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Booking } from "@/types";
+import type { Booking, CompetitionTrack } from "@/types";
 import { formatDate } from "@/lib/utils";
 import { MessageBanner } from "@/components/ui/MessageBanner";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
@@ -35,6 +35,7 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
   const [savingInfo, setSavingInfo] = useState(false);
   const [showTrackForm, setShowTrackForm] = useState(false);
   const [savingTrack, setSavingTrack] = useState(false);
+  const [editingTrack, setEditingTrack] = useState<CompetitionTrack | null>(null);
 
   useEffect(() => {
     fetchBooking();
@@ -113,6 +114,31 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
       if (res.ok) {
         setMessage({ type: "success", text: "Rada lisatud!" });
         setShowTrackForm(false);
+        fetchBooking();
+      } else {
+        const err = await res.json();
+        setMessage({ type: "error", text: err.error || "Salvestamine ebaõnnestus" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Serveri viga" });
+    } finally {
+      setSavingTrack(false);
+    }
+  }
+
+  async function handleUpdateTrack(data: TrackFormData) {
+    if (!editingTrack) return;
+    setSavingTrack(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/competitions/${id}/tracks`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, trackId: editingTrack.id }),
+      });
+      if (res.ok) {
+        setMessage({ type: "success", text: "Rada salvestatud!" });
+        setEditingTrack(null);
         fetchBooking();
       } else {
         const err = await res.json();
@@ -260,7 +286,7 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Rajad</h2>
-            {!showTrackForm && (
+            {!showTrackForm && !editingTrack && (
               <button
                 onClick={() => setShowTrackForm(true)}
                 className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
@@ -280,7 +306,37 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
             />
           )}
 
-          <TrackTable tracks={booking.competitionTracks} onDelete={handleDeleteTrack} />
+          {editingTrack && (
+            <TrackForm
+              // A new track means a new form: without this the fields
+              // would keep the previously edited track’s values.
+              key={editingTrack.id}
+              defaultDate={editingTrack.competitionDate.split("T")[0]}
+              referees={refereeOptions(booking.referee)}
+              initial={{
+                competitionDate: editingTrack.competitionDate.split("T")[0],
+                letter: editingTrack.letter,
+                trackType: editingTrack.trackType,
+                size: editingTrack.size,
+                officiality: editingTrack.officiality,
+                referee: editingTrack.referee || "",
+                sizeStandard: editingTrack.sizeStandard || "EST",
+                isRelay: editingTrack.isRelay,
+              }}
+              onSubmit={handleUpdateTrack}
+              onCancel={() => setEditingTrack(null)}
+              saving={savingTrack}
+            />
+          )}
+
+          <TrackTable
+            tracks={booking.competitionTracks}
+            onEdit={(track) => {
+              setShowTrackForm(false);
+              setEditingTrack(track);
+            }}
+            onDelete={handleDeleteTrack}
+          />
         </div>
       )}
 

@@ -5,9 +5,11 @@ import { formatDate } from "@/lib/utils";
 
 export function TrackTable({
   tracks,
+  onEdit,
   onDelete,
 }: {
   tracks: CompetitionTrack[];
+  onEdit: (track: CompetitionTrack) => void;
   onDelete: (trackId: number) => void;
 }) {
   const tracksByDate: Record<string, CompetitionTrack[]> = {};
@@ -63,6 +65,12 @@ export function TrackTable({
                           {track.isRelay && (
                             <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full">Teaterada</span>
                           )}
+                          <button
+                            onClick={() => onEdit(track)}
+                            className="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-xs transition-colors"
+                          >
+                            Muuda
+                          </button>
                           <button
                             onClick={() => onDelete(track.id)}
                             className="text-red-600 hover:bg-red-50 px-2 py-1 rounded text-xs transition-colors"
