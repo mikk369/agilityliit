@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { COMPETITION_OFFICIALITY } from "@/lib/constants";
 import { MessageBanner } from "@/components/ui/MessageBanner";
+import { RefereeList } from "@/components/ui/RefereeList";
 
 export default function NewCompetitionPage() {
   const router = useRouter();
@@ -32,20 +33,6 @@ export default function NewCompetitionPage() {
 
   function update(field: string, value: string) {
     setForm({ ...form, [field]: value });
-  }
-
-  function addReferee() {
-    setReferees([...referees, ""]);
-  }
-
-  function updateReferee(index: number, value: string) {
-    const updated = [...referees];
-    updated[index] = value;
-    setReferees(updated);
-  }
-
-  function removeReferee(index: number) {
-    setReferees(referees.filter((_, i) => i !== index));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -202,35 +189,7 @@ export default function NewCompetitionPage() {
         {/* Referees */}
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Kohtunikud</h2>
-          <div className="space-y-2">
-            {referees.map((ref, i) => (
-              <div key={i} className="flex gap-2">
-                <input
-                  type="text"
-                  value={ref}
-                  onChange={(e) => updateReferee(i, e.target.value)}
-                  placeholder={`Kohtunik ${i + 1}`}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                {referees.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeReferee(i)}
-                    className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    Eemalda
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addReferee}
-              className="text-sm text-blue-600 hover:text-blue-700"
-            >
-              + Lisa kohtunik
-            </button>
-          </div>
+          <RefereeList referees={referees} onChange={setReferees} keepFirstRow />
         </div>
 
         {/* Status — admin only: an organizer's booking is a request, and the

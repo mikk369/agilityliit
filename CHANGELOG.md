@@ -1,5 +1,26 @@
 # Changelog
 
+## The competition's referees can be edited again, and the forms offer them (2026-08-29)
+
+Referees could only be typed when the competition was created; afterwards the Põhiinfo tab printed them read-only, and every form that wanted a judge asked for free text. `PATCH /api/bookings/[id]` had accepted `referee` all along — there was no screen sending it. The result was the same judge spelled three ways across one competition, which the dog-statistics judge filter reads as three judges.
+
+| File | Change |
+|------|--------|
+| `src/components/ui/RefereeList.tsx` | New — the add/remove/rename list, plus `refereeOptions()` which trims blanks and duplicates out of the stored JSON |
+| `src/app/organizer/new/page.tsx` | Uses the shared list; its own three handlers are gone |
+| `src/app/organizer/competition/[id]/InfoTab.tsx` | The edit form carries the referees, saved with the rest of the booking |
+| `src/app/organizer/competition/[id]/TrackForm.tsx` | The referee is picked from the competition's list |
+| `src/app/organizer/competition/[id]/page.tsx` | Passes the list to the track form |
+| `src/app/organizer/competition/[id]/measurements/page.tsx` | Same dropdown, and a lone referee is preselected — one judge usually measures the whole day |
+
+Both dropdowns fall back to a text field while the competition has no referees on file, so a competition imported without them is not stuck.
+
+Blank rows are dropped on save: an empty input is a row the organizer has not filled in yet, never a referee named "".
+
+Verified with `npx tsc --noEmit`, `npx eslint` and `npx next build`. **Unverified:** against a running database — `DATABASE_URL` (localhost:3306) refuses connections from here, so no referee list has been round-tripped.
+
+---
+
 ## The per-day start limit is back, and this time it is enforced (2026-08-29)
 
 `max_competitors_per_day` had a column, a Zod field and a route that stored it — and no screen to set it, no count to compare it against, and no check anywhere. `POST /api/competitors` asked only whether registration was open, so a day the organizer had capped in the WordPress app kept taking entries here.

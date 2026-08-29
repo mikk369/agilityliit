@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import type { DogSummary } from "@/types";
 import { classFromCm, MIN_MEASUREMENT_CM, MAX_MEASUREMENT_CM } from "@/lib/dog-sizes";
+import { refereeOptions } from "@/components/ui/RefereeList";
 
 interface MeasurementsCompetitor {
   id: number;
@@ -36,6 +37,9 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [bookingName, setBookingName] = useState("");
+  // The competition's own referees, offered instead of retyping the name for
+  // every dog measured on the day.
+  const [referees, setReferees] = useState<string[]>([]);
 
   // Form state
   const [selectedDogId, setSelectedDogId] = useState<string>("");
@@ -61,6 +65,10 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
       if (bookingRes.ok) {
         const b = await bookingRes.json();
         setBookingName(b.organizerName);
+        const names = refereeOptions(b.referee);
+        setReferees(names);
+        // One referee usually measures the whole day, so preselect them.
+        if (names.length === 1) setReferee(names[0]);
       }
 
       if (measurementsRes.ok) {
@@ -250,13 +258,26 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Kohtunik <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                value={referee}
-                onChange={(e) => setReferee(e.target.value)}
-                placeholder="Kohtuniku nimi"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              {referees.length > 0 ? (
+                <select
+                  value={referee}
+                  onChange={(e) => setReferee(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Vali kohtunik...</option>
+                  {referees.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={referee}
+                  onChange={(e) => setReferee(e.target.value)}
+                  placeholder="Kohtuniku nimi"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              )}
             </div>
 
             {/* Measured height -> class */}

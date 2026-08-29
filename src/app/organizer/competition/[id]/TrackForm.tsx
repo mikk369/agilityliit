@@ -39,11 +39,14 @@ function withTrackType(form: TrackFormData, trackType: string): TrackFormData {
 
 export function TrackForm({
   defaultDate,
+  referees,
   onSubmit,
   onCancel,
   saving,
 }: {
   defaultDate: string;
+  /** The competition's referees, from its Põhiinfo tab. */
+  referees: string[];
   onSubmit: (data: TrackFormData) => void;
   onCancel: () => void;
   saving: boolean;
@@ -122,12 +125,28 @@ export function TrackForm({
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Kohtunik</label>
-          <input
-            type="text"
-            value={form.referee}
-            onChange={(e) => setForm({ ...form, referee: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+          {/* Picked from the competition's own referees so the same judge is
+              spelled one way on every track. Typed by hand until the Põhiinfo
+              tab has any. */}
+          {referees.length > 0 ? (
+            <select
+              value={form.referee}
+              onChange={(e) => setForm({ ...form, referee: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">—</option>
+              {referees.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={form.referee}
+              onChange={(e) => setForm({ ...form, referee: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Suurusstandard</label>

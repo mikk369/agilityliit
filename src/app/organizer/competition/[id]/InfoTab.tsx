@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Booking } from "@/types";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { RefereeList, refereeOptions } from "@/components/ui/RefereeList";
 
 export type BookingEditForm = {
   organizerName: string;
@@ -13,6 +14,7 @@ export type BookingEditForm = {
   competitionOfficiality: string;
   info: string;
   competitionClasses: string;
+  referee: string[];
 };
 
 function toEditForm(booking: Booking): BookingEditForm {
@@ -25,6 +27,7 @@ function toEditForm(booking: Booking): BookingEditForm {
     competitionOfficiality: booking.competitionOfficiality,
     info: booking.info || "",
     competitionClasses: booking.competitionClasses || "",
+    referee: refereeOptions(booking.referee),
   };
 }
 
@@ -67,7 +70,7 @@ export function InfoTab({
             onSubmit={(e) => {
               e.preventDefault();
               setEditing(false);
-              onSaveBooking(editForm);
+              onSaveBooking({ ...editForm, referee: refereeOptions(editForm.referee) });
             }}
             className="space-y-4"
           >
@@ -89,6 +92,13 @@ export function InfoTab({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Kohtunikud</label>
+              <RefereeList
+                referees={editForm.referee}
+                onChange={(referee) => setEditForm({ ...editForm, referee })}
+              />
+            </div>
             <div className="flex gap-3">
               <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
                 {saving ? "Salvestamine..." : "Salvesta"}
@@ -107,7 +117,7 @@ export function InfoTab({
             <InfoRow label="Asukoht" value={booking.location} />
             <InfoRow label="Võistlustüüp" value={booking.competitionOfficiality} />
             <InfoRow label="Staatus" value={booking.status} />
-            <InfoRow label="Kohtunikud" value={(booking.referee as string[])?.join(", ") || "—"} />
+            <InfoRow label="Kohtunikud" value={refereeOptions(booking.referee).join(", ") || "—"} />
             {booking.competitionClasses && (
               <InfoRow label="Võistlusklassid" value={booking.competitionClasses} />
             )}

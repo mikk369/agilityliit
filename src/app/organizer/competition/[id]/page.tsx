@@ -12,6 +12,7 @@ import { TrackForm, type TrackFormData } from "./TrackForm";
 import { TrackTable } from "./TrackTable";
 import { SettingsTab } from "./SettingsTab";
 import { MaxPerDayPanel } from "./MaxPerDayPanel";
+import { refereeOptions } from "@/components/ui/RefereeList";
 
 const SUBPAGES = [
   { segment: "competitors", label: "Võistlejad" },
@@ -272,6 +273,7 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
           {showTrackForm && (
             <TrackForm
               defaultDate={booking.startDate ? booking.startDate.split("T")[0] : ""}
+              referees={refereeOptions(booking.referee)}
               onSubmit={handleAddTrack}
               onCancel={() => setShowTrackForm(false)}
               saving={savingTrack}
