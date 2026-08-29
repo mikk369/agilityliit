@@ -1,5 +1,34 @@
 # Changelog
 
+## Sponsor logos are back, stored by this app rather than by WordPress (2026-08-29)
+
+`competition_info.sponsor_image_urls` held logos that nothing here could add, remove or show. The WordPress editor uploaded them to the media library and stored `{ id, url, size }`; there is no media library in this app, so the bytes now go to a directory on the server and the stored entry keeps that exact shape — rows carried over from production still read, and still render, without touching the data.
+
+| File | Change |
+|------|--------|
+| `src/lib/sponsor-images.ts` | New — the limits, the S/M/L sizes, and `readSponsorImages()`, which validates rows written by either app and drops duplicates and junk |
+| `src/lib/sponsor-storage.ts` | New — the upload directory, the generated file name, and the name check. Separate because the module above is imported by the browser too, where `fs` cannot go |
+| `src/app/api/sponsor-images/route.ts` | New — POST uploads (organizer or admin, 2 MB, images only); GET lists the logos the organizer has used on their other competitions |
+| `src/app/api/sponsor-images/[file]/route.ts` | New — serves a stored file, publicly and immutably |
+| `src/app/organizer/competition/[id]/SponsorImagesPanel.tsx` | New — upload, pick from earlier competitions, set each logo's size, remove; under Põhiinfo |
+| `src/app/competitions/[id]/page.tsx` | The logos above the description, at the widths the WordPress stylesheet used |
+| `src/app/api/public/competitions/[id]/route.ts`, `src/types/booking.ts` | The public detail carries `sponsorImages` |
+| `src/lib/validations.ts` | The stored entry is `{ id: string \| number, url, size: S \| M \| L }` — the previous shape (`id` string-only, `size` a number) would have rejected every migrated row on save |
+| `src/middleware.ts` | `/api/sponsor-images/<file>` is public; the collection route above it checks the session itself |
+| `.gitignore`, `.env.example`, `README.md` | `SPONSOR_UPLOAD_DIR`, defaulting to `./uploads/sponsors`, and that directory ignored |
+
+Uploading and attaching are deliberately separate steps, as they are in the WordPress editor: the file is stored on upload, but only reaches a competition when the list is saved.
+
+Removing a logo unlinks it from the competition and leaves the file alone — the same `force_delete_media=false` the old app used. It stays available in "Vali varasematest", which is what makes next season's competition a two-click job.
+
+The gallery is built from the organizer's own competitions rather than a site-wide library, which covers the case the library served: the same club, the same sponsors, next year. An admin sees all of them.
+
+File names are generated, never taken from the upload, and are validated against a strict pattern before being joined onto the upload directory, so a crafted name cannot read anything else on the server.
+
+Verified with `npx tsc --noEmit`, `npx eslint` and `npx next build`. `readSponsorImages()` and the file-name check were exercised directly: path traversal, a WordPress row with a numeric id, a local row, a duplicate and malformed entries all behave. **Unverified:** the upload itself — no file has been written or served, and `DATABASE_URL` (localhost:3306) refuses connections from here, so nothing has been saved onto a competition.
+
+---
+
 ## Adding a track covers every size group at once (2026-08-29)
 
 A track is stored per size, so "Saturday's B track, H2, for all five sizes" meant five trips through the add form, picking the letter by hand each time and getting it wrong when a day already had tracks. The WordPress editor asks once: a row carries a size multi-select and is expanded on save, all sizes sharing the row's letter.

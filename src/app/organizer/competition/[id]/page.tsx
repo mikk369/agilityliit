@@ -12,6 +12,8 @@ import { TrackForm, type TrackFormData, type NewTracksData } from "./TrackForm";
 import { TrackTable } from "./TrackTable";
 import { SettingsTab } from "./SettingsTab";
 import { MaxPerDayPanel } from "./MaxPerDayPanel";
+import { SponsorImagesPanel } from "./SponsorImagesPanel";
+import { readSponsorImages } from "@/lib/sponsor-images";
 import { refereeOptions } from "@/components/ui/RefereeList";
 
 const SUBPAGES = [
@@ -299,13 +301,20 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
       </div>
 
       {activeTab === "info" && (
-        <InfoTab
-          booking={booking}
-          onSaveBooking={handleSaveBooking}
-          saving={saving}
-          onSaveInfo={handleSaveInfo}
-          savingInfo={savingInfo}
-        />
+        <div className="space-y-6">
+          <InfoTab
+            booking={booking}
+            onSaveBooking={handleSaveBooking}
+            saving={saving}
+            onSaveInfo={handleSaveInfo}
+            savingInfo={savingInfo}
+          />
+          <SponsorImagesPanel
+            bookingId={id}
+            initial={readSponsorImages(booking.competitionInfo?.sponsorImages)}
+            onMessage={setMessage}
+          />
+        </div>
       )}
 
       {activeTab === "tracks" && (

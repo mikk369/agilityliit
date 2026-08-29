@@ -130,10 +130,12 @@ export type CompetitorInput = z.infer<typeof competitorSchema>;
 export const competitionInfoSchema = z.object({
   descriptionEst: z.string().nullable().optional(),
   descriptionEng: z.string().nullable().optional(),
+  // Rows written by the WordPress app carry a numeric media id and an S/M/L
+  // display size, so both id types are accepted and the size is the same three.
   sponsorImages: z.array(z.object({
-    id: z.string(),
-    url: z.string(),
-    size: z.number().optional(),
+    id: z.union([z.string(), z.number()]),
+    url: z.string().min(1),
+    size: z.enum(["S", "M", "L"]).optional(),
   })).nullable().optional(),
   maxCompetitorsPerDay: z.record(z.string(), z.number()).nullable().optional(),
 });

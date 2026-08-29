@@ -52,7 +52,11 @@ export default withAuth(
           pathname.startsWith("/not-allowed") ||
           pathname.startsWith("/api/auth") ||
           // Public feed read by the WordPress calendar on agilityliit.ee
-          pathname.startsWith("/api/public")
+          pathname.startsWith("/api/public") ||
+          // A stored sponsor logo, published on the competition page. Only the
+          // files: the collection route above it uploads and lists, and checks
+          // the session itself.
+          pathname.startsWith("/api/sponsor-images/")
         ) {
           return true;
         }

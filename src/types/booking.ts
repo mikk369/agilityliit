@@ -122,6 +122,7 @@ export interface PublicCompetitionDetail {
   competitionInfo: {
     descriptionEst: string | null;
     descriptionEng: string | null;
+    sponsorImages: unknown;
   } | null;
   competitionTracks: Pick<
     CompetitionTrack,

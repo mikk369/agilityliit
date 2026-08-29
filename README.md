@@ -38,6 +38,7 @@ NEXTAUTH_URL="http://localhost:3000"
 # Optional — public API read by the WordPress calendar on agilityliit.ee
 # PUBLIC_APP_URL="https://agliit.agilityliit.ee"          # base for links in /api/public/calendar and reset mails (defaults to NEXTAUTH_URL)
 # PUBLIC_ALLOWED_ORIGINS="https://agilityliit.ee"         # CORS allow-list (defaults to agilityliit.ee and www.agilityliit.ee)
+# SPONSOR_UPLOAD_DIR="/var/lib/agliit/sponsors"          # where sponsor logos are written (defaults to ./uploads/sponsors)
 
 # Outgoing mail — required in production for password reset
 SMTP_HOST="smtp.example.ee"

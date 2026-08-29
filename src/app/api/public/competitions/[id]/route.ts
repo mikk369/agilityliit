@@ -55,7 +55,11 @@ export async function GET(
         regStatus: true,
         regCloseDate: true,
         competitionInfo: {
-          select: { descriptionEst: true, descriptionEng: true },
+          select: {
+            descriptionEst: true,
+            descriptionEng: true,
+            sponsorImages: true,
+          },
         },
         competitionTracks: {
           orderBy: [{ competitionDate: "asc" }, { sortOrder: "asc" }],

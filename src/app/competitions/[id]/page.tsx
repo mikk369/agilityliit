@@ -6,6 +6,14 @@ import { useSession } from "next-auth/react";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { formatDate } from "@/lib/utils";
 import type { PublicCompetitionDetail } from "@/types";
+import { readSponsorImages, type SponsorImageSize } from "@/lib/sponsor-images";
+
+/** The three sponsor sizes, as wide as the WordPress stylesheet drew them. */
+const SPONSOR_BOX: Record<SponsorImageSize, string> = {
+  S: "max-h-20 max-w-[120px]",
+  M: "max-h-[140px] max-w-[200px]",
+  L: "max-h-[200px] max-w-[280px]",
+};
 
 export default function CompetitionDetailPage({
   params,
@@ -73,6 +81,8 @@ export default function CompetitionDetailPage({
           : { label: t.compDetailRegClosed, className: "bg-red-100 text-red-700" };
 
   // Show description based on language
+  const sponsors = readSponsorImages(booking.competitionInfo?.sponsorImages);
+
   const description = locale === "en" && booking.competitionInfo?.descriptionEng
     ? booking.competitionInfo.descriptionEng
     : booking.competitionInfo?.descriptionEst;
@@ -147,6 +157,25 @@ export default function CompetitionDetailPage({
           </div>
         )}
       </div>
+
+      {sponsors.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {sponsors.map((sponsor) => (
+              // Logos come from this app and, on migrated rows, from the
+              // WordPress media library — a plain img keeps them out of the
+              // image optimizer's host allow-list.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={String(sponsor.id)}
+                src={sponsor.url}
+                alt="Sponsor"
+                className={`object-contain ${SPONSOR_BOX[sponsor.size || "M"]}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {description && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
