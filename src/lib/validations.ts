@@ -122,15 +122,20 @@ export type CompetitorInput = z.infer<typeof competitorSchema>;
 // COMPETITION INFO
 // =========================================================================
 
+/**
+ * Every field is optional and the route writes only what it is sent, so a
+ * caller saving one panel of the info page cannot blank the others. An
+ * explicit `null` is the way to clear a field; leaving it out keeps it.
+ */
 export const competitionInfoSchema = z.object({
-  descriptionEst: z.string().optional(),
-  descriptionEng: z.string().optional(),
+  descriptionEst: z.string().nullable().optional(),
+  descriptionEng: z.string().nullable().optional(),
   sponsorImages: z.array(z.object({
     id: z.string(),
     url: z.string(),
     size: z.number().optional(),
-  })).optional(),
-  maxCompetitorsPerDay: z.record(z.string(), z.number()).optional(),
+  })).nullable().optional(),
+  maxCompetitorsPerDay: z.record(z.string(), z.number()).nullable().optional(),
 });
 
 export type CompetitionInfoInput = z.infer<typeof competitionInfoSchema>;

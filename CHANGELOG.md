@@ -1,5 +1,22 @@
 # Changelog
 
+## Saving a description no longer blanks the sponsors and day limits (2026-08-29)
+
+`POST /api/competitions/[id]/info` wrote all four of its fields on every request. The organizer info page sends only `descriptionEst` and `descriptionEng`, so the route filled in `Prisma.JsonNull` for the other two and every save of a description wiped `sponsor_image_urls` and `max_competitors_per_day` — including the values carried over from the production database, which nothing in this app has a screen for yet.
+
+| File | Change |
+|------|--------|
+| `src/app/api/competitions/[id]/info/route.ts` | The upsert is built from the fields the request actually carried; an absent field is left untouched |
+| `src/lib/validations.ts` | The four fields are `.nullable().optional()`, so an explicit `null` is how a caller clears one |
+
+Clearing a JSON field now writes `Prisma.DbNull` — a real SQL NULL, the same state a fresh row has — rather than a JSON `null` literal in the column.
+
+This is the shape the panels still to be built need: the sponsor manager and the per-day limits will each save on their own without disturbing the descriptions.
+
+Verified with `npx tsc --noEmit`, `npx eslint` and `npx next build`. **Unverified:** against a running database — `DATABASE_URL` (localhost:3306) refuses connections from here, so no save has actually been round-tripped.
+
+---
+
 ## Vaccination deadlines now greet the competitor at login (2026-08-29)
 
 A competitor had to open Minu koerad and expand a dog to notice that a vaccination had run out — nothing told them otherwise, and an expired vaccination is caught at the competition instead. Logging in to the competitor area now raises the same modal the production app shows: the dogs whose üldvaktsiin or marutaudivaktsiin has expired or expires within 5 days, each with its date.
