@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/utils";
 import { MessageBanner } from "@/components/ui/MessageBanner";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { InfoTab, type BookingEditForm } from "./InfoTab";
-import { TrackForm, type TrackFormData } from "./TrackForm";
+import { TrackForm, type TrackFormData, type NewTracksData } from "./TrackForm";
 import { TrackTable } from "./TrackTable";
 import { SettingsTab } from "./SettingsTab";
 import { MaxPerDayPanel } from "./MaxPerDayPanel";
@@ -102,23 +102,39 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
     }
   }
 
-  async function handleAddTrack(data: TrackFormData) {
+  /**
+   * One form row becomes one track per size group, all sharing the row's
+   * letter — the same expansion the WordPress editor does on save.
+   */
+  async function handleAddTracks({ sizes, ...row }: NewTracksData) {
     setSavingTrack(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/competitions/${id}/tracks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        setMessage({ type: "success", text: "Rada lisatud!" });
-        setShowTrackForm(false);
-        fetchBooking();
-      } else {
-        const err = await res.json();
-        setMessage({ type: "error", text: err.error || "Salvestamine ebaõnnestus" });
+      const failed: string[] = [];
+      for (const size of sizes) {
+        const res = await fetch(`/api/competitions/${id}/tracks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...row, size }),
+        });
+        if (!res.ok) failed.push(size);
       }
+
+      if (failed.length === 0) {
+        setMessage({
+          type: "success",
+          text: sizes.length === 1 ? "Rada lisatud!" : `${sizes.length} rada lisatud!`,
+        });
+        setShowTrackForm(false);
+      } else {
+        // Some sizes may have been created before one failed, so the table is
+        // reloaded either way and the message names what did not go through.
+        setMessage({
+          type: "error",
+          text: `Neid suurusrühmi ei õnnestunud lisada: ${failed.join(", ")}`,
+        });
+      }
+      fetchBooking();
     } catch {
       setMessage({ type: "error", text: "Serveri viga" });
     } finally {
@@ -219,6 +235,16 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
     );
   }
 
+  // Letters already on each day, so the add form can offer a free one.
+  const usedLetters = booking.competitionTracks.reduce(
+    (acc, track) => {
+      const date = track.competitionDate.split("T")[0];
+      (acc[date] ??= []).push(track.letter);
+      return acc;
+    },
+    {} as Record<string, string[]>
+  );
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Header */}
@@ -300,7 +326,8 @@ export default function CompetitionEditorPage({ params }: { params: Promise<{ id
             <TrackForm
               defaultDate={booking.startDate ? booking.startDate.split("T")[0] : ""}
               referees={refereeOptions(booking.referee)}
-              onSubmit={handleAddTrack}
+              usedLetters={usedLetters}
+              onAdd={handleAddTracks}
               onCancel={() => setShowTrackForm(false)}
               saving={savingTrack}
             />

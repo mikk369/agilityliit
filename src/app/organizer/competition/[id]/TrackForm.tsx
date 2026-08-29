@@ -22,6 +22,16 @@ export type TrackFormData = {
 };
 
 /**
+ * What "Lisa rada" submits: one row of the form, for every size group ticked.
+ *
+ * A track is stored per size, but the organizer thinks in rows — "Saturday's
+ * B track, H2, for every size" is one decision and used to be five trips
+ * through this form. The sizes share the row's letter, the way they do in the
+ * WordPress editor.
+ */
+export type NewTracksData = Omit<TrackFormData, "size"> & { sizes: string[] };
+
+/**
  * Changing the class also settles the fields that depend on it: classes that
  * cannot be official are forced to "mitteametlik", and only team classes can
  * be a relay. Mirrors handleTrackFieldChange in organizerPage.
@@ -37,11 +47,18 @@ function withTrackType(form: TrackFormData, trackType: string): TrackFormData {
   };
 }
 
+/** The first letter not yet used on that day, so rows do not collide. */
+function nextFreeLetter(used: string[]): string {
+  return TRACK_LETTERS.find((letter) => !used.includes(letter)) ?? TRACK_LETTERS[0];
+}
+
 export function TrackForm({
   defaultDate,
   referees,
   initial,
+  usedLetters,
   onSubmit,
+  onAdd,
   onCancel,
   saving,
 }: {
@@ -50,7 +67,11 @@ export function TrackForm({
   referees: string[];
   /** The track being edited; absent when adding a new one. */
   initial?: TrackFormData;
-  onSubmit: (data: TrackFormData) => void;
+  /** Letters already taken, per date, so a new row is offered a free one. */
+  usedLetters?: Record<string, string[]>;
+  /** Saving an edit; the add flow uses `onAdd` instead. */
+  onSubmit?: (data: TrackFormData) => void;
+  onAdd?: (data: NewTracksData) => void;
   onCancel: () => void;
   saving: boolean;
 }) {
@@ -58,21 +79,34 @@ export function TrackForm({
   const [form, setForm] = useState<TrackFormData>(
     initial ?? {
       competitionDate: defaultDate,
-      letter: "A",
+      letter: nextFreeLetter(usedLetters?.[defaultDate] ?? []),
       trackType: "A1",
       size: "S",
       officiality: "ametlik",
-      referee: "",
+      // One referee for the whole competition is the common case; offering it
+      // saves picking it on every track.
+      referee: referees.length === 1 ? referees[0] : "",
       sizeStandard: "EST",
       isRelay: false,
     }
   );
+  // A new row covers every size group unless the organizer unticks some,
+  // which is how the WordPress editor starts too.
+  const [sizes, setSizes] = useState<string[]>([...SIZES]);
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit(form);
+        if (editing) {
+          onSubmit?.(form);
+          return;
+        }
+        // `size` is the single-track field the edit form uses; adding
+        // carries the ticked list instead.
+        const { size, ...row } = form;
+        void size;
+        onAdd?.({ ...row, sizes });
       }}
       className="bg-white rounded-xl border border-gray-200 p-6"
     >
@@ -85,7 +119,18 @@ export function TrackForm({
           <input
             type="date"
             value={form.competitionDate}
-            onChange={(e) => setForm({ ...form, competitionDate: e.target.value })}
+            onChange={(e) => {
+              const competitionDate = e.target.value;
+              setForm({
+                ...form,
+                competitionDate,
+                // Letters run per day, so a new day starts from its own first
+                // free one. An edited track keeps the letter it has.
+                letter: editing
+                  ? form.letter
+                  : nextFreeLetter(usedLetters?.[competitionDate] ?? []),
+              });
+            }}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
@@ -110,15 +155,37 @@ export function TrackForm({
             {TRACK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
-        <div>
+        <div className={editing ? "" : "col-span-2 sm:col-span-3"}>
           <label className="block text-sm font-medium text-gray-700 mb-1">Suurusrühm *</label>
-          <select
-            value={form.size}
-            onChange={(e) => setForm({ ...form, size: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          {editing ? (
+            <select
+              value={form.size}
+              onChange={(e) => setForm({ ...form, size: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          ) : (
+            <div className="flex flex-wrap gap-3 pt-1">
+              {SIZES.map((s) => (
+                <label key={s} className="flex items-center gap-1.5 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={sizes.includes(s)}
+                    onChange={() =>
+                      setSizes(
+                        sizes.includes(s)
+                          ? sizes.filter((picked) => picked !== s)
+                          : SIZES.filter((size) => sizes.includes(size) || size === s)
+                      )
+                    }
+                    className="text-blue-600 rounded"
+                  />
+                  {s}
+                </label>
+              ))}
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Võistlustüüp *</label>
@@ -181,8 +248,16 @@ export function TrackForm({
         </div>
       </div>
       <div className="flex gap-3 mt-4">
-        <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
-          {saving ? "Salvestamine..." : editing ? "Salvesta rada" : "Lisa rada"}
+        <button
+          type="submit"
+          disabled={saving || (!editing && sizes.length === 0)}
+          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+        >
+          {saving
+            ? "Salvestamine..."
+            : editing
+              ? "Salvesta rada"
+              : `Lisa ${sizes.length} rada`}
         </button>
         <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
           Tühista

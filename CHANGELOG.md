@@ -1,5 +1,24 @@
 # Changelog
 
+## Adding a track covers every size group at once (2026-08-29)
+
+A track is stored per size, so "Saturday's B track, H2, for all five sizes" meant five trips through the add form, picking the letter by hand each time and getting it wrong when a day already had tracks. The WordPress editor asks once: a row carries a size multi-select and is expanded on save, all sizes sharing the row's letter.
+
+| File | Change |
+|------|--------|
+| `src/app/organizer/competition/[id]/TrackForm.tsx` | Adding shows size checkboxes (all ticked to start) and reports `NewTracksData`; editing keeps its single-size select. The letter defaults to the first free one for the chosen day and follows the day when it changes, and a lone referee is preselected |
+| `src/app/organizer/competition/[id]/page.tsx` | `handleAddTracks` posts one track per ticked size, and knows which letters each day already uses |
+
+The button says how many tracks it will create ("Lisa 5 rada"), and cannot be pressed with no size ticked.
+
+If some sizes fail, the ones that were created stay: the table reloads either way and the message names the sizes that did not go through, rather than claiming the whole row failed.
+
+Editing is deliberately untouched — a stored track is one size, and changing which size an existing track is for is a different act from creating five.
+
+Verified with `npx tsc --noEmit`, `npx eslint` and `npx next build`. **Unverified:** against a running database — `DATABASE_URL` (localhost:3306) refuses connections from here, so no row has actually been expanded.
+
+---
+
 ## A track can be corrected instead of deleted and re-added (2026-08-29)
 
 `/api/competitions/[id]/tracks` had GET, POST and DELETE. Fixing a referee or an officiality meant deleting the track and adding it again — and a track with entries cannot be deleted at all, so after registration opened a wrong value was simply stuck. Deleting also takes its results, protocol rows and team results with it.
