@@ -63,32 +63,66 @@ SELECT id, name, email, role FROM users WHERE role = 'ADMIN';
 
 The new role is picked up on the next session refresh; a reload is enough. From then on admins manage every role at `/admin/users`, and the database is only needed again if the last admin account is ever lost.
 
-Create the database tables:
+### First install, in order
+
+Every step here is per machine, not per clone-of-the-repo — nothing below arrives
+through git.
 
 ```bash
-npx prisma db push
+mysql -u root -e "CREATE DATABASE agliit CHARACTER SET utf8mb4"   # 1. Prisma fills the database, it does not create it
+npm install                                                       # 2.
+#                                                                    3. write .env (above)
+npx prisma generate                                               # 4. TypeScript client -> src/generated/
+npx prisma migrate deploy                                         # 5. tables, from prisma/migrations
+npm run dev                                                       # 6.
 ```
 
-Run dev server:
+Open http://localhost:3000, register an account, then promote it to admin — see
+[Roles](#roles) above.
+
+If `DATABASE_URL` points at a database that **already has the tables** (an
+existing server, or one first created with `db push`), skip step 5: `migrate
+deploy` would try to CREATE them again and fail. Baseline that database once
+instead — `prisma/migrations/README.md` has the two commands.
+
+### After every `git pull`
 
 ```bash
-npm run dev
+npm install                 # only when package-lock.json changed
+npx prisma generate         # whenever prisma/schema.prisma changed — harmless otherwise, so when unsure, run it
+npx prisma migrate deploy   # only when prisma/migrations/ gained a folder
+npm run build               # production only — `npm run dev` rebuilds on its own
 ```
 
-Open http://localhost:3000
+Which of those you actually need, the pull itself will tell you:
 
-### The two Prisma commands
+```bash
+git diff HEAD@{1} --stat -- prisma/ package-lock.json
+```
+
+`prisma generate` is the step people skip. The generated client is gitignored, so
+a pull never brings it, and a schema change without it leaves the client
+describing the old shape — the build fails, or the app throws
+`@prisma/client did not initialize yet`.
+
+### The Prisma commands
 
 They do different jobs and are easy to mix up:
 
 | Command | What it does | When |
 |---------|--------------|------|
-| `npx prisma generate` | Writes the TypeScript client into `src/generated/prisma`. **Never touches the database.** | After `npm install` and after every schema change. Per machine — `src/generated/` is gitignored, so the server needs its own |
-| `npx prisma db push` | Creates and alters the **tables** in `DATABASE_URL` to match the schema. Writes no code. | Once per database, and again after a schema change |
+| `npx prisma generate` | Writes the TypeScript client into `src/generated/prisma`. **Never touches the database.** | After `npm install`, and after every schema change. Per machine — `src/generated/` is gitignored, so the server needs its own |
+| `npx prisma migrate deploy` | Applies the pending migrations in `prisma/migrations` to `DATABASE_URL`. Writes no code. | On first install, and after a pull that brought a new migration |
+| `npx prisma migrate dev --name ...` | Writes a new migration from a schema change **and** applies it locally. | Only while developing, never on the server |
 
-`db push` runs `generate` for you at the end, so a schema change usually needs only the push.
+Unlike `db push`, `migrate deploy` does **not** run `generate` for you — a schema
+change needs both, generate first.
 
-**Stop the dev server before running either.** Windows locks `query_engine-windows.dll.node` while the app is running, and generate fails with `EPERM: operation not permitted, rename ...`. The database change still went through — only the client copy failed, so re-run `npx prisma generate` with the server stopped.
+Do not use `npx prisma db push` on a database holding real rows: it has no
+migration history, so it resolves a column rename as DROP + ADD and empties the
+column without asking.
+
+**Stop the dev server before running any of these.** Windows locks `query_engine-windows.dll.node` while the app is running, and generate fails with `EPERM: operation not permitted, rename ...`. The database change still went through — only the client copy failed, so re-run `npx prisma generate` with the server stopped.
 
 ## Deploying to the server
 
@@ -100,16 +134,21 @@ app itself only ever speaks plain HTTP to `127.0.0.1`.
 
 ```bash
 git pull
-npm ci                  # only when package-lock.json changed
-npx prisma generate     # required — src/generated/ is not in git
-npx prisma db push      # only when prisma/schema.prisma changed
+npm ci                     # only when package-lock.json changed
+npx prisma generate        # required — src/generated/ is not in git
+npx prisma migrate deploy  # only when prisma/migrations/ gained a folder
 npm run build
 pm2 restart agliit
 ```
 
-`prisma generate` is the step people skip: the generated client is gitignored,
-so a fresh `git pull` never brings it. Without it the build fails or the app
-throws `@prisma/client did not initialize yet`.
+Same flow as [After every `git pull`](#after-every-git-pull) above, plus the PM2
+restart. `prisma generate` is the step people skip: the generated client is
+gitignored, so a fresh `git pull` never brings it. Without it the build fails or
+the app throws `@prisma/client did not initialize yet`.
+
+The very first deploy against a database that already carries the WordPress data
+is the baseline case — `migrate resolve --applied 0_init` rather than
+`migrate deploy`. See `prisma/migrations/README.md`.
 
 Stop the app before running prisma commands if the platform locks the query
 engine file (Windows does; Linux does not).
@@ -157,7 +196,8 @@ check, because every visitor would be arriving as `127.0.0.1`.
 
 1. `.env` from `.env.example` — real domain, a fresh `NEXTAUTH_SECRET`
    (`openssl rand -base64 32`), and the `SMTP_*` block.
-2. `npx prisma db push` to create the tables.
+2. `npx prisma migrate deploy` to create the tables (or baseline an existing
+   database — see `prisma/migrations/README.md`).
 3. `npm run build`, then start under PM2 on the proxied port.
 4. `pm2 save` so it survives a reboot.
 5. Register an account, then promote it:
@@ -175,7 +215,7 @@ mysql -u root -e "CREATE DATABASE d88811sd560857 CHARACTER SET utf8mb4"
 mysql -u root d88811sd560857 < d88811sd560857.sql
 ```
 
-2. Make sure the target database exists with the Prisma schema pushed (see Setup above).
+2. Make sure the target database exists with its tables created (see First install above).
 
 3. Run the migration script:
 
