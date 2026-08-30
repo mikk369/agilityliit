@@ -15,6 +15,17 @@ export async function GET(
     const { bookingId } = await params;
     const id = parseInt(bookingId);
 
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      select: { protocolPublished: true },
+    });
+    if (!booking) {
+      return NextResponse.json(
+        { error: "Broneeringut ei leitud" },
+        { status: 404 }
+      );
+    }
+
     const entries = await prisma.startProtocol.findMany({
       where: { bookingId: id },
       include: {
@@ -57,7 +68,12 @@ export async function GET(
       orderBy: [{ competitionDate: "asc" }, { sortOrder: "asc" }],
     });
 
-    return NextResponse.json(entries);
+    // The organizer page reads { entries, published } — a bare array here left
+    // it with protocol.entries === undefined, so a saved protocol came back empty.
+    return NextResponse.json({
+      entries,
+      published: booking.protocolPublished === 1,
+    });
   } catch {
     return NextResponse.json({ error: "Serveri viga" }, { status: 500 });
   }

@@ -1,5 +1,19 @@
 # Changelog
 
+## A saved start protocol comes back after a reload (2026-08-30)
+
+`GET /api/start-protocol/[bookingId]` answered with a bare array, but the organizer page reads `{ entries, published }`. `protocol.entries` on an array is `undefined`, so it fell through to `[]`: generating and saving worked — the rows really did land in `start_protocols` — and then reopening the page showed an empty protocol and offered to generate it again. `published` was never sent at all, so the button read "Avaldamata" whatever `bookings.protocol_published` held.
+
+| File | Change |
+|------|--------|
+| `src/app/api/start-protocol/[bookingId]/route.ts` | GET returns `{ entries, published }`, the flag read from the booking; an unknown booking is a 404 rather than an empty protocol |
+
+The route is fixed rather than the page, because the page also needs `published` and the GET was the only place that could supply it. Nothing else calls the route — the public protocol has its own endpoint under `/api/start-protocol/public/[bookingId]`, which was never affected.
+
+Verified with `npx tsc --noEmit`. **Unverified:** against a running database — `DATABASE_URL` refuses connections from here, so no saved protocol has actually been read back. The separate report of the page failing to open is not explained by this: the app has no "page couldn't load" message of its own, and the page compiles.
+
+---
+
 ## Sponsor logos are back, stored by this app rather than by WordPress (2026-08-29)
 
 `competition_info.sponsor_image_urls` held logos that nothing here could add, remove or show. The WordPress editor uploaded them to the media library and stored `{ id, url, size }`; there is no media library in this app, so the bytes now go to a directory on the server and the stored entry keeps that exact shape — rows carried over from production still read, and still render, without touching the data.
