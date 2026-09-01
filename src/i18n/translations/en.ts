@@ -22,7 +22,7 @@ const en: Translations = {
   relay: "(relay)",
 
   // Nav
-  navLogo: "Agility Liit",
+  navLogo: "agliit",
   navCompetitions: "Competitions",
   navStatistics: "Statistics",
   navOrganizer: "Organizer",

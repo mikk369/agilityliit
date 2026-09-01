@@ -20,7 +20,7 @@ const et = {
   relay: "(teateviis)",
 
   // Nav
-  navLogo: "Agility Liit",
+  navLogo: "agliit",
   navCompetitions: "Võistlused",
   navStatistics: "Statistika",
   navOrganizer: "Korraldaja",

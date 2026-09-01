@@ -1,5 +1,15 @@
 # Changelog
 
+## Top-left brand reads "agliit" (2026-09-01)
+
+The navbar logo said "Agility Liit"; it now reads "agliit" in both languages. Single string in the i18n tables — the navbar renders `t.navLogo`.
+
+| File | Change |
+|------|--------|
+| `src/i18n/translations/en.ts`, `src/i18n/translations/et.ts` | `navLogo` → "agliit" |
+
+---
+
 ## Dogs needing measurement are gathered into one list (2026-09-01)
 
 The organizer's Mõõtmised page could record a measurement and list the ones already taken, but there was no single place showing which dogs still need measuring — a competitor ticks "vajab mõõtmist" at registration, and the referee had to open each entry to find them. The page already loads every competitor (with the `needsMeasurement` flag) and every recorded measurement, so the worklist is built from that on the client — no new endpoint, no schema change.
