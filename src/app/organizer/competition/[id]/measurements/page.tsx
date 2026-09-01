@@ -3,12 +3,14 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import type { DogSummary } from "@/types";
-import { classFromCm, MIN_MEASUREMENT_CM, MAX_MEASUREMENT_CM } from "@/lib/dog-sizes";
+import { classFromCm, dogSizeCode, MIN_MEASUREMENT_CM, MAX_MEASUREMENT_CM } from "@/lib/dog-sizes";
 import { refereeOptions } from "@/components/ui/RefereeList";
 
 interface MeasurementsCompetitor {
   id: number;
   status: string;
+  /** Flagged by the competitor at registration as still needing a measurement. */
+  needsMeasurement: boolean;
   handler: { id: number; handlerName: string };
   dog: DogSummary;
 }
@@ -112,6 +114,52 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
       dogHandlerMap.set(c.dog.id, c.handler.handlerName);
     }
   }
+
+  // Consolidated worklist: every dog flagged as needing a measurement, gathered
+  // in one place so the referee doesn't have to hunt through each registration.
+  // A dog drops off once its class is confirmed (two agreeing measurements set
+  // sizeOfficial). The "Mõõdetud" count shows how many measurements it has so
+  // far, mirroring the WordPress "0x" column.
+  const measurementCountByDog = new Map<number, number>();
+  for (const m of measurements) {
+    measurementCountByDog.set(m.dogId, (measurementCountByDog.get(m.dogId) ?? 0) + 1);
+  }
+
+  const SIZE_ORDER = ["XS", "S", "M", "SL", "L"];
+  const dogsNeedingMeasurement = (() => {
+    const seen = new Set<number>();
+    const rows: {
+      dogId: number;
+      dogName: string;
+      breed: string | null;
+      handlerName: string;
+      sizeCode: string;
+      sizeEst: string | null;
+      count: number;
+    }[] = [];
+    for (const c of competitors) {
+      if (!c.needsMeasurement) continue;
+      if (seen.has(c.dog.id)) continue;
+      // A confirmed official class means the dog no longer needs measuring.
+      if (c.dog.sizeOfficial) continue;
+      seen.add(c.dog.id);
+      rows.push({
+        dogId: c.dog.id,
+        dogName: c.dog.nickName,
+        breed: c.dog.breed ?? null,
+        handlerName: c.handler.handlerName,
+        sizeCode: dogSizeCode(c.dog.sizeEst),
+        sizeEst: c.dog.sizeEst ?? null,
+        count: measurementCountByDog.get(c.dog.id) ?? 0,
+      });
+    }
+    return rows.sort((a, b) => {
+      const sa = SIZE_ORDER.indexOf(a.sizeCode);
+      const sb = SIZE_ORDER.indexOf(b.sizeCode);
+      if (sa !== sb) return (sa === -1 ? 99 : sa) - (sb === -1 ? 99 : sb);
+      return a.dogName.localeCompare(b.dogName);
+    });
+  })();
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -228,6 +276,53 @@ export default function MeasurementsPage({ params }: { params: Promise<{ id: str
           {message.text}
         </div>
       )}
+
+      {/* Consolidated worklist of dogs still needing a measurement */}
+      <div className="bg-amber-50 rounded-xl border border-amber-200 overflow-hidden mb-6">
+        <div className="px-4 py-3 bg-amber-100/60 border-b border-amber-200">
+          <h2 className="text-lg font-semibold text-amber-900">
+            Mõõtmist vajavad koerad ({dogsNeedingMeasurement.length})
+          </h2>
+        </div>
+        {dogsNeedingMeasurement.length === 0 ? (
+          <div className="p-6 text-center text-sm text-amber-800/80">
+            Ühtegi mõõtmist vajavat koera pole.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-amber-200 text-left">
+                  <th className="px-4 py-3 font-medium text-amber-800">Suurus</th>
+                  <th className="px-4 py-3 font-medium text-amber-800">Koer</th>
+                  <th className="px-4 py-3 font-medium text-amber-800">Koerajuht</th>
+                  <th className="px-4 py-3 font-medium text-amber-800">Mõõdetud</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dogsNeedingMeasurement.map((d) => (
+                  <tr
+                    key={d.dogId}
+                    className="border-b border-amber-100 last:border-0 hover:bg-amber-100/40 cursor-pointer"
+                    onClick={() => setSelectedDogId(String(d.dogId))}
+                    title="Vali mõõtmise lisamiseks"
+                  >
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      {d.sizeCode || "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900">{d.dogName}</div>
+                      {d.breed && <div className="text-xs text-gray-500">{d.breed}</div>}
+                    </td>
+                    <td className="px-4 py-3 text-gray-900">{d.handlerName}</td>
+                    <td className="px-4 py-3 text-gray-700">{d.count}×</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Add measurement form */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">

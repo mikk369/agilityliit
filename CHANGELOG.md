@@ -1,5 +1,19 @@
 # Changelog
 
+## Dogs needing measurement are gathered into one list (2026-09-01)
+
+The organizer's Mõõtmised page could record a measurement and list the ones already taken, but there was no single place showing which dogs still need measuring — a competitor ticks "vajab mõõtmist" at registration, and the referee had to open each entry to find them. The page already loads every competitor (with the `needsMeasurement` flag) and every recorded measurement, so the worklist is built from that on the client — no new endpoint, no schema change.
+
+| File | Change |
+|------|--------|
+| `src/app/organizer/competition/[id]/measurements/page.tsx` | New "Mõõtmist vajavad koerad (N)" card at the top: Suurus / Koer / Koerajuht / Mõõdetud columns, sorted by size then name, deduplicated by dog. A dog drops off once its class is confirmed (`sizeOfficial` set by two agreeing measurements). Clicking a row pre-selects that dog in the add-measurement form below |
+
+The "Mõõdetud" column counts a dog's measurements so far (`0×`, `1×`), mirroring the WordPress column, so it is clear at a glance which dogs have a first measurement but not yet a confirming second.
+
+Verified with `npx eslint` (0 errors on the file) and `npx tsc --noEmit` (no type errors in this file). **Unverified:** against a running database — no live competition data was read back.
+
+---
+
 ## A saved start protocol comes back after a reload (2026-08-30)
 
 `GET /api/start-protocol/[bookingId]` answered with a bare array, but the organizer page reads `{ entries, published }`. `protocol.entries` on an array is `undefined`, so it fell through to `[]`: generating and saving worked — the rows really did land in `start_protocols` — and then reopening the page showed an empty protocol and offered to generate it again. `published` was never sent at all, so the button read "Avaldamata" whatever `bookings.protocol_published` held.
